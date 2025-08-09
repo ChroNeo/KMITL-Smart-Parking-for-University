@@ -7,7 +7,7 @@ const login = async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    const [rows] = await conn.query("SELECT * FROM User WHERE email = ?", [
+    const [rows] = await conn.query("SELECT * FROM users WHERE email = ?", [
       email,
     ]);
 
@@ -69,7 +69,7 @@ const register = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 12);
 
     const [result] = await conn.query(
-      "INSERT INTO User (email,full_name,phone_number,password_hash,car_brand,car_registration) VALUES (?, ?, ?, ?, ?, ?)",
+      "INSERT INTO users (email,full_name,phone_number,password_hash,car_brand,car_registration) VALUES (?, ?, ?, ?, ?, ?)",
       [
         email,
         fullname,
@@ -82,7 +82,7 @@ const register = async (req, res) => {
 
     if (result.affectedRows === 1) {
       const [userRows] = await conn.query(
-        "SELECT user_id AS id, email, full_name AS fullname, phone_number, car_brand, car_registration, create_date FROM User WHERE user_id = ?",
+        "SELECT user_id AS id, email, full_name AS fullname, phone_number, car_brand, car_registration, created_at FROM users WHERE user_id = ?",
         [result.insertId]
       );
       const user = userRows[0];
