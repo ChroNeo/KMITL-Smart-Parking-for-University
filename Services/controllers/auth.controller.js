@@ -69,7 +69,7 @@ const register = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 12);
 
     const [result] = await conn.query(
-      "INSERT INTO User (email,full_name,phone_number,password,car_brand,car_registration) VALUES (?, ?, ?, ?, ?, ?)",
+      "INSERT INTO User (email,full_name,phone_number,password_hash,car_brand,car_registration) VALUES (?, ?, ?, ?, ?, ?)",
       [
         email,
         fullname,
