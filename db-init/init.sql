@@ -1,33 +1,44 @@
--- Create the database if it doesn't exist
-CREATE DATABASE IF NOT EXISTS IOT_Project;
+-- IOT Project – Users table (reviewed & corrected)
+-- Notes:
+-- 1) Use password_hash (bcrypt, 60 chars). Do NOT store raw password.
+-- 2) ENUM values are lowercase: 'user' | 'admin'.
+-- 3) Sample hashes below are 60‑char bcrypt placeholders for testing.
 
--- Use the newly created or existing database
-USE IOT_Project;
+-- Create DB if not exists
+CREATE DATABASE IF NOT EXISTS `IOT_Project` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE `IOT_Project`;
 
--- Drop the User table if it already exists to ensure a clean slate
-DROP TABLE IF EXISTS User;
+-- Clean slate
+DROP TABLE IF EXISTS `users`;
 
--- Create the User table with the final schema
-CREATE TABLE User (
-    user_id INT AUTO_INCREMENT PRIMARY KEY,
-    full_name VARCHAR(255) NOT NULL,
-    phone_number VARCHAR(20),
-    role VARCHAR(50) NOT NULL DEFAULT 'User',
-    car_brand VARCHAR(100),
-    car_registration VARCHAR(50),
-    email VARCHAR(255) UNIQUE NOT NULL,
-    password VARCHAR(255) NOT NULL,
-    create_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    update_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
+-- Create table
+CREATE TABLE `users` (
+  `user_id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `full_name`        VARCHAR(255) NOT NULL,
+  `phone_number`     VARCHAR(20),
+  `role`             ENUM('user','admin') NOT NULL DEFAULT 'user',
+  `car_brand`        VARCHAR(100),
+  `car_registration` VARCHAR(50),
+  `email`            VARCHAR(255) NOT NULL,
+  `password_hash`    CHAR(60) NOT NULL,               -- bcrypt output length = 60
+  `created_at`       TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at`       TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`user_id`),
+  UNIQUE KEY `uniq_users_email` (`email`),
+  UNIQUE KEY `uniq_users_phone` (`phone_number`),      -- remove if duplicates allowed
+  UNIQUE KEY `uniq_users_car_reg` (`car_registration`) -- remove if duplicates allowed
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Dummy data (bcrypt 12-round placeholders; length 60)
+-- Example bcrypt from docs (do not use in production)
+SET @hash := '$2b$12$C6UzMDM.H6dfI/f/IKcEe.CyW8Y0ruzJ1j7rwhhtjfiw2BC5T9Nee';
 
+INSERT INTO `users` (full_name, phone_number, role, car_brand, car_registration, email, password_hash) VALUES
+('Alice Smith',   '555-1234', 'admin', 'Toyota', 'XYZ-123', 'alice.smith@example.com',   @hash),
+('Bob Johnson',   '555-5678', 'user',  'Honda',  'ABC-456', 'bob.johnson@example.com',   @hash),
+('Charlie Brown', '555-9012', 'user',  'Ford',   'LMN-789', 'charlie.brown@example.com', @hash),
+('Diana Prince',  '555-3456', 'admin', 'Tesla',  'OPQ-012', 'diana.prince@example.com',  @hash),
+('Ethan Hunt',    '555-7890', 'user',  'BMW',    'RST-345', 'ethan.hunt@example.com',    @hash);
 
--- Insert some dummy data for testing
--- IMPORTANT: Passwords are bcrypt hashes with a salt round of 12.
-INSERT INTO User (full_name, phone_number, role, car_brand, car_registration, email, password) VALUES
-('Alice Smith', '555-1234', 'Admin', 'Toyota', 'XYZ-123', 'alice.smith@example.com', '$2b$12$4m1Gg8f5M3h9h2o3n6j4s9F6G7H8I9J0K1L2M3N4O5P6Q7R8S9T0U1V2W3X4Y5Z6A7B8C9D0E'),
-('Bob Johnson', '555-5678', 'User', 'Honda', 'ABC-456', 'bob.johnson@example.com', '$2b$12$5G9F2d8h3k4e6n9j0a2s1f0t8i6u5o4p7q8r9s0t1u2v3w4x5y6z7a8b9c0d1e2f'),
-('Charlie Brown', '555-9012', 'User', 'Ford', 'LMN-789', 'charlie.brown@example.com', '$2b$12$6t3r5e2p9a7s6d4f1g8h0j9k5l3m1n5o4p2q7r3s8t9u0v1w2x3y4z5a6b7c8d9e'),
-('Diana Prince', '555-3456', 'Admin', 'Tesla', 'OPQ-012', 'diana.prince@example.com', '$2b$12$3c4x1v8b5n9m7l0k6j3h1g9f8d5s2a7q4w0e9r8t5y6u3i2o1p4a7s8d9f1g2h3j'),
-('Ethan Hunt', '555-7890', 'User', 'BMW', 'RST-345', 'ethan.hunt@example.com', '$2b$12$7k8l9j4h1g5f2d6s9a0q1w2e3r4t5y6u7i8o9p0l1k2j3h4g5f6d7s8a9q0w1e2r');
+-- Quick sanity checks
+-- SELECT user_id, full_name, role, email, LENGTH(password_hash) AS len FROM users;
