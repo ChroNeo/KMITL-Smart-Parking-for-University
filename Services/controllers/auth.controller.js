@@ -34,7 +34,11 @@ const login = async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: "1d" }
     );
-    res.json({ message: "Login successful!", token });
+    res.json({
+      access_token: token,
+      token_type: "Bearer",
+      expires_in: "1d",
+    });
   } catch (error) {
     console.error("Server error:", error);
     res.status(500).json({ error: "Internal server error" });
