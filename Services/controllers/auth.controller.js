@@ -77,7 +77,21 @@ const register = async (req, res) => {
     );
 
     if (result.affectedRows === 1) {
-      res.status(201).json({ message: "User registered successfully!" });
+      const [userRows] = await conn.query(
+        "SELECT user_id AS id, email, full_name AS fullname, phone_number, car_brand, car_registration, create_date FROM User WHERE user_id = ?",
+        [result.insertId]
+      );
+      const user = userRows[0];
+      res
+        .status(201)
+        .json({ message: "User registered successfully!", data: user });
+      return;
+    }
+
+    if (result.affectedRows === 1) {
+      res
+        .status(201)
+        .json({ message: "User registered successfully!", data: result });
     } else {
       res.status(500).json({ error: "Failed to register user!" });
     }
