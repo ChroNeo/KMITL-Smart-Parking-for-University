@@ -8,14 +8,22 @@ services:
     container_name: backend-app
     ports:
       - "3000:3000"
-    depends_on:
-      - db
     environment:
-      DB_HOST: mysql
+      NODE_ENV: development
+      DB_HOST: db
       DB_USER: root
       DB_PASSWORD: password
       DB_NAME: IOT_Project
+      CHOKIDAR_USEPOLLING: "true"
+      CHOKIDAR_INTERVAL: "300"
+      TZ: Asia/Bangkok
+    depends_on:
+      - db
     restart: always
+    volumes:
+      - ./Services:/usr/src/app
+      - /usr/src/app/node_modules
+    command: npm run dev
 
   db:
     image: mysql:8.0
@@ -28,9 +36,11 @@ services:
       MYSQL_DATABASE: IOT_Project
       MYSQL_USER: Test
       MYSQL_PASSWORD: Password
+      TZ: Asia/Bangkok
     volumes:
       - db_data:/var/lib/mysql
       - ./db-init:/docker-entrypoint-initdb.d
+
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
     container_name: phpmyadmin
@@ -42,5 +52,6 @@ services:
       MYSQL_ROOT_PASSWORD: password
     depends_on:
       - db
+
 volumes:
   db_data:

@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "dev",
-    "start": "node index.js",
-    "dev": "nodemon server.js"
+    "start": "node src/index.js",
+    "dev": "nodemon -L --watch . --ext js,json --ignore node_modules --exec node index.js"
   },
   "author": "",
   "license": "ISC",
