@@ -1,6 +1,12 @@
 const express = require("express");
-const { login, register } = require("../controllers/auth.controller"); // แก้ registor → register
+const {
+  login,
+  register,
+  getMe,
+  updateMe,
+} = require("../controllers/auth.controller"); // แก้ registor → register
 const { getStatus } = require("../controllers/slots.controller");
+const auth = require("../middleware/auth.middleware");
 const route = express.Router();
 
 /**
@@ -104,5 +110,133 @@ route.post("/login", login);
  *         description: Internal server error.
  */
 route.post("/register", register);
+/**
+ * @swagger
+ * /api/v1/slots/status:
+ *   get:
+ *     summary: Get status of all parking slots
+ *     tags: [Slots]
+ *     responses:
+ *       200:
+ *         description: List of parking slots and their status
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 count:
+ *                   type: integer
+ *                   example: 10
+ *                 items:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       slot_number:
+ *                         type: integer
+ *                         example: 1
+ *                       slot_name:
+ *                         type: string
+ *                         example: "A1"
+ *                       status:
+ *                         type: string
+ *                         example: "available"
+ *       500:
+ *         description: Failed to fetch slot status
+ */
 route.get("/slots/status", getStatus);
+route.put("/me", auth, updateMe);
+/**
+ * @swagger
+ * /api/v1/me:
+ *   put:
+ *     summary: Update current user profile
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               full_name:
+ *                 type: string
+ *                 example: Alice Smith
+ *               phone_number:
+ *                 type: string
+ *                 example: 555-1234
+ *               car_brand:
+ *                 type: string
+ *                 example: Toyota
+ *               car_registration:
+ *                 type: string
+ *                 example: XYZ-123
+ *               car_province:
+ *                 type: string
+ *                 example: กรุงเทพมหานคร
+ *     responses:
+ *       200:
+ *         description: Profile updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Profile updated successfully
+ *       401:
+ *         description: Unauthorized, missing or invalid token
+ *       500:
+ *         description: Internal server error
+ */
+route.get("/me", auth, getMe);
+/**
+ * @swagger
+ * /api/v1/me:
+ *   get:
+ *     summary: Get current user profile
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: User profile information
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 user_id:
+ *                   type: integer
+ *                   example: 1
+ *                 full_name:
+ *                   type: string
+ *                   example: Alice Smith
+ *                 email:
+ *                   type: string
+ *                   example: alice.smith@example.com
+ *                 role:
+ *                   type: string
+ *                   example: admin
+ *                 car_brand:
+ *                   type: string
+ *                   example: Toyota
+ *                 car_registration:
+ *                   type: string
+ *                   example: XYZ-123
+ *                 car_province:
+ *                   type: string
+ *                   example: กรุงเทพมหานคร
+ *                 phone_number:
+ *                   type: string
+ *                   example: 555-1234
+ *       401:
+ *         description: Unauthorized, missing or invalid token
+ *       500:
+ *         description: Internal server error
+ */
+
 module.exports = route;
