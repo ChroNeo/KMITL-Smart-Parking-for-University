@@ -1,5 +1,6 @@
 const express = require("express");
 const { login, register } = require("../controllers/auth.controller"); // แก้ registor → register
+const { getStatus } = require("../controllers/slots.controller");
 const route = express.Router();
 
 /**
@@ -103,5 +104,5 @@ route.post("/login", login);
  *         description: Internal server error.
  */
 route.post("/register", register);
-
+route.get("/slots/status", getStatus);
 module.exports = route;
