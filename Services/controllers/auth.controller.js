@@ -156,5 +156,46 @@ const register = async (req, res) => {
     return sendError(res, 500, "internal", "Internal server error.", [], rid);
   }
 };
+const getMe = async (req, res) => {
+  try {
+    const userId = req.user.id; // มาจาก middleware auth ที่ decode JWT แล้ว
+    const [rows] = await conn.query(
+      "SELECT user_id, full_name, email, role, car_brand, car_registration, car_province, phone_number FROM users WHERE user_id = ?",
+      [userId]
+    );
 
-module.exports = { login, register };
+    if (rows.length === 0) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json(rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+const updateMe = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const {
+      full_name,
+      phone_number,
+      car_brand,
+      car_registration,
+      car_province
+    } = req.body;
+
+    await conn.query(
+      `UPDATE users 
+       SET full_name = ?, phone_number = ?, car_brand = ?, car_registration = ?, car_province = ? 
+       WHERE user_id = ?`,
+      [full_name, phone_number, car_brand, car_registration, car_province, userId]
+    );
+
+    res.json({ message: "Profile updated successfully" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+module.exports = { login, register, getMe, updateMe };
