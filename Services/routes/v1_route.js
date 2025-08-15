@@ -240,4 +240,66 @@ route.get("/me", auth, getMe);
  *         description: Internal server error
  */
 route.post("/reservation", auth, reservation);
+/**
+ * @swagger
+ * /api/v1/reservation:
+ *   post:
+ *     summary: Create a parking slot reservation
+ *     description: Reserves a specific parking slot for the authenticated user.  
+ *       The slot will be locked for 60 minutes unless canceled or expired.  
+ *       Requires JWT authentication.
+ *     tags:
+ *       - Reservations
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - slot_number
+ *             properties:
+ *               slot_number:
+ *                 type: integer
+ *                 example: 1
+ *                 description: The parking slot number to reserve.
+ *     responses:
+ *       201:
+ *         description: Reservation created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 reservation_id:
+ *                   type: integer
+ *                   example: 42
+ *                 slot_number:
+ *                   type: integer
+ *                   example: 1
+ *                 reservation_status:
+ *                   type: string
+ *                   enum: [CONFIRMED, CANCELLED, EXPIRED, USED]
+ *                   example: CONFIRMED
+ *                 access_code:
+ *                   type: string
+ *                   example: "123456"
+ *                 created_at:
+ *                   type: string
+ *                   format: date-time
+ *                   example: "2025-08-15T09:30:00.000Z"
+ *                 expires_at:
+ *                   type: string
+ *                   format: date-time
+ *                   example: "2025-08-15T10:30:00.000Z"
+ *       400:
+ *         description: Invalid request or slot not available
+ *       404:
+ *         description: Slot not found
+ *       500:
+ *         description: Server error
+ */
+
 module.exports = route;
