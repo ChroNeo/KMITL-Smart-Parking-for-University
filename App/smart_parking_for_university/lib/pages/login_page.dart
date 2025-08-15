@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:smart_parking_for_university/pages/home.dart';
 import 'package:smart_parking_for_university/pages/registor_page.dart';
 
 class LoginPage extends StatelessWidget {
@@ -7,14 +8,13 @@ class LoginPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xDDF0FFE1), // BGcolor
+      backgroundColor: const Color(0xDDF0FFE1), 
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Title
               Column(
                 children: [
                   const Text(
@@ -121,7 +121,14 @@ class LoginPage extends StatelessWidget {
                           ),
                           backgroundColor: Colors.green,
                         ),
-                        onPressed: () {},
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const Home(),
+                            ),
+                          );
+                        },
                         child: const Text(
                           'Login',
                           style: TextStyle(color: Colors.white, fontSize: 18),
