@@ -18,18 +18,18 @@ CREATE TABLE `users` (
   `user_id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   `full_name`        VARCHAR(255) NOT NULL,
   `phone_number`     VARCHAR(20),
-  `role`             ENUM('user','admin') NOT NULL DEFAULT 'user',
   `car_brand`        VARCHAR(100),
   `car_registration` VARCHAR(50),
   `car_province`     VARCHAR(100),
   `email`            VARCHAR(255) NOT NULL,
   `password_hash`    VARCHAR(60) NOT NULL,
+  `role`             ENUM('user','admin') NOT NULL DEFAULT 'user',
   `created_at`       TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at`       TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  
   PRIMARY KEY (`user_id`),
   UNIQUE KEY `uniq_users_email` (`email`),
-  UNIQUE KEY `uniq_users_phone` (`phone_number`),
-  UNIQUE KEY `uniq_users_car_reg` (`car_registration`)
+  UNIQUE KEY `uniq_users_phone` (`phone_number`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =========================
