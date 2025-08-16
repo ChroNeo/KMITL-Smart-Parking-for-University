@@ -1,6 +1,8 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
-import 'package:smart_parking_for_university/pages/edit_page.dart';
-import 'package:smart_parking_for_university/components/menu.dart';
+import 'package:smart_parking_for_university/models/api_model.dart';
+import 'package:smart_parking_for_university/services/api_service.dart';
 
 class RegistorPage extends StatefulWidget {
   const RegistorPage({super.key});
@@ -11,20 +13,153 @@ class RegistorPage extends StatefulWidget {
 
 class _RegistorPageState extends State<RegistorPage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  bool _showSuccessPopup = false;
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
+  final fullnameController = TextEditingController();
+  final phoneNumberController = TextEditingController();
+  final carBrandController = TextEditingController();
+  final carRegistrationController = TextEditingController();
+  final carProvinceController = TextEditingController();
+  final _api = ApiService();
+  Future<void> _submitForm() async {
+    final user = RegisterRequest(
+      email: emailController.text,
+      password: passwordController.text,
+      fullname: fullnameController.text,
+      phoneNumber: phoneNumberController.text,
+      carBrand: carBrandController.text,
+      carRegistration: carRegistrationController.text,
+      carProvince: carProvinceController.text,
+    );
+    try {
+      await _doRegis(user); // async gap
+      if (!mounted) return;
+      showSuccessPopup(context);
+    } catch (e) {
+      if (!mounted) return;
+      showErrorPopup(context, e.toString());
+    }
+  }
 
-  void _submitForm() {
-    setState(() {
-      _showSuccessPopup = true;
-    });
+  Future<Map<String, dynamic>> _doRegis(RegisterRequest user) async {
+    final res = await _api.register(user); // คืน JSON 100%
+    return res;
+  }
 
-    Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) {
-        setState(() {
-          _showSuccessPopup = false;
-        });
-      }
-    });
+  void showSuccessPopup(BuildContext context) {
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: false,
+      barrierLabel: '',
+      barrierColor: Colors.transparent,
+      pageBuilder: (context, _, __) {
+        return Center(
+          child: Material(
+            color: Colors.transparent,
+            child: Container(
+              margin: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color(0xFFDDF0D6), // พื้นหลังเขียวอ่อน
+                border: Border.all(color: Colors.green, width: 1), // กรอบเขียว
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      Center(
+                        child: Text(
+                          'ลงทะเบียนสำเร็จ',
+                          style: const TextStyle(
+                            fontSize: 18,
+                            color: Colors.green,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        right: 0,
+                        child: IconButton(
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                          icon: Icon(Icons.close, color: Colors.grey[700]),
+                          onPressed: () => Navigator.pushNamed(context, '/login'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void showErrorPopup(BuildContext context, [String message = '']) {
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: '',
+      barrierColor: Colors.transparent,
+      pageBuilder: (context, _, __) {
+        return Center(
+          child: Material(
+            color: Colors.transparent,
+            child: Container(
+              margin: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFDE2E2), // พื้นหลังแดงอ่อน
+                border: Border.all(color: Colors.red, width: 1), // กรอบแดง
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Stack(
+                    alignment: Alignment.center, // ข้อความอยู่กลาง
+                    children: [
+                      Center(
+                        child: Text(
+                          'ดำเนินการไม่สำเร็จ',
+                          style: const TextStyle(
+                            fontSize: 18,
+                            color: Colors.red,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        right: 0,
+                        child: IconButton(
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                          icon: Icon(Icons.close, color: Colors.grey[700]),
+                          onPressed: () => Navigator.of(context).pop(),
+                        ),
+                      ),
+                    ],
+                  ),
+                  Text(
+                    message,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      color: Colors.red,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -93,9 +228,19 @@ class _RegistorPageState extends State<RegistorPage> {
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      Expanded(child: _buildInput('หมายเลขทะเบียนรถ')),
+                      Expanded(
+                        child: _buildInput(
+                          'หมายเลขทะเบียนรถ',
+                          carRegistrationController,
+                        ),
+                      ),
                       const SizedBox(width: 10),
-                      Expanded(child: _buildInput('จังหวัดป้ายทะเบียน')),
+                      Expanded(
+                        child: _buildInput(
+                          'จังหวัดป้ายทะเบียน',
+                          carProvinceController,
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 16),
@@ -107,7 +252,7 @@ class _RegistorPageState extends State<RegistorPage> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  _buildInput('ยี่ห้อรถยนต์'),
+                  _buildInput('ยี่ห้อรถยนต์', carBrandController),
                   const SizedBox(height: 16),
                   const Align(
                     alignment: Alignment.centerLeft,
@@ -117,13 +262,13 @@ class _RegistorPageState extends State<RegistorPage> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  _buildInput('ชื่อผู้ขับขี่/เจ้าของรถ'),
+                  _buildInput('ชื่อผู้ขับขี่/เจ้าของรถ', fullnameController),
                   const SizedBox(height: 12),
-                  _buildInput('เบอร์ติดต่อ'),
+                  _buildInput('เบอร์ติดต่อ', phoneNumberController),
                   const SizedBox(height: 12),
-                  _buildInput('Email'),
+                  _buildInput('Email', emailController),
                   const SizedBox(height: 12),
-                  _buildInput('Password', obscure: true),
+                  _buildInput('Password', passwordController, obscure: true),
                   const SizedBox(height: 24),
 
                   // Submit
@@ -152,68 +297,18 @@ class _RegistorPageState extends State<RegistorPage> {
               ),
             ),
           ),
-
-          if (_showSuccessPopup)
-            Center(
-              child: Container(
-                width: 250,
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFDDF0D6),
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Stack(
-                  children: [
-                    Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: const [
-                        SizedBox(height: 8),
-                        Text(
-                          'ลงทะเบียนสำเร็จ',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18,
-                            color: Colors.green,
-                          ),
-                        ),
-                        SizedBox(height: 8),
-                      ],
-                    ),
-                    Positioned(
-                      top: 0,
-                      right: 0,
-                      child: GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            _showSuccessPopup = false;
-                          });
-                        },
-                        child: const Icon(
-                          Icons.close,
-                          size: 20,
-                          color: Colors.black54,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
         ],
       ),
     );
   }
 
-  Widget _buildInput(String hint, {bool obscure = false}) {
+  Widget _buildInput(
+    String hint,
+    TextEditingController controller, {
+    bool obscure = false,
+  }) {
     return TextField(
+      controller: controller,
       obscureText: obscure,
       decoration: InputDecoration(
         hintText: hint,
