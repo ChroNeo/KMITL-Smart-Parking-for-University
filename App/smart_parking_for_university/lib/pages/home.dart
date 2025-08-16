@@ -19,7 +19,7 @@ class _HomeState extends State<Home> {
       context: context,
       barrierDismissible: true,
       builder: (_) => Dialog(
-        backgroundColor: Colors.transparent,
+        backgroundColor: const Color(0xFFE0FBDB),
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
@@ -111,7 +111,7 @@ class _HomeState extends State<Home> {
     return Scaffold(
       key: _scaffoldKey,
       drawer: Drawer(
-        backgroundColor: const Color(0xDDF0FFE1),
+        backgroundColor: const Color(0xFFE0FBDB),
         child: ListView(
           padding: const EdgeInsets.symmetric(vertical: 60, horizontal: 24),
           children: [
@@ -137,7 +137,7 @@ class _HomeState extends State<Home> {
         ),
       ),
 
-      backgroundColor: const Color(0xDDF0FFE1),
+      backgroundColor: const Color(0xFFE0FBDB),
       body: Column(
         children: [
           Padding(
@@ -157,7 +157,11 @@ class _HomeState extends State<Home> {
               ],
             ),
           ),
-          const Icon(Icons.directions_car, size: 60, color: Colors.green),
+          const Icon(
+            Icons.directions_car,
+            size: 60,
+            color: Color.fromARGB(255, 0, 0, 0),
+          ),
           const SizedBox(height: 8),
           const Text(
             "จองที่จอด",

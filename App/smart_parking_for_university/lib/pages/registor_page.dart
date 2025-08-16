@@ -30,7 +30,7 @@ class _RegistorPageState extends State<RegistorPage> {
     return Scaffold(
       key: _scaffoldKey,
       drawer: Drawer(
-        backgroundColor: const Color(0xDDF0FFE1),
+        backgroundColor: const Color(0xFFE0FBDB),
         child: ListView(
           padding: const EdgeInsets.symmetric(vertical: 60, horizontal: 24),
           children: [
@@ -46,7 +46,7 @@ class _RegistorPageState extends State<RegistorPage> {
         ),
       ),
 
-      backgroundColor: const Color(0xDDF0FFE1),
+      backgroundColor: const Color(0xFFE0FBDB),
       body: Stack(
         children: [
           SafeArea(

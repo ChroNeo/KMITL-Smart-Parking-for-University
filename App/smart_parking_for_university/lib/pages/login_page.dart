@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:smart_parking_for_university/pages/home.dart';
 import 'package:smart_parking_for_university/pages/registor_page.dart';
 
@@ -8,7 +9,7 @@ class LoginPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xDDF0FFE1), 
+      backgroundColor: const Color(0xFFE0FBDB),
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -45,7 +46,7 @@ class LoginPage extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(width: 4),
-                          Image.asset('assets/car.png', height: 60),
+                          SvgPicture.asset('assets/car.svg', height: 60),
                         ],
                       ),
                     ],
