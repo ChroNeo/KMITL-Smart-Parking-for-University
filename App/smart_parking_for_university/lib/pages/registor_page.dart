@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:smart_parking_for_university/pages/edit_page.dart';
+import 'package:smart_parking_for_university/components/menu.dart';
 
 class RegistorPage extends StatefulWidget {
   const RegistorPage({super.key});

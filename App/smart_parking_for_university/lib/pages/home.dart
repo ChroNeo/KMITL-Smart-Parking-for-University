@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:smart_parking_for_university/components/menu.dart';
 import 'package:smart_parking_for_university/pages/dashboard.dart';
+import 'package:smart_parking_for_university/pages/parkingbooking.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -27,16 +29,10 @@ class _HomeState extends State<Home> {
             borderRadius: BorderRadius.circular(16),
           ),
           child: Row(
-            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Icon(
-                isBooking ? Icons.directions_car : Icons.cancel,
-                color: isBooking ? Colors.green : Colors.red,
-                size: 40,
-              ),
               const SizedBox(width: 12),
-              Expanded(
-                child: Text(
+              Text(
                   isBooking ? "จองที่จอดสำเร็จ" : "ยกเลิกที่จอดรถ",
                   style: TextStyle(
                     fontSize: 18,
@@ -44,6 +40,10 @@ class _HomeState extends State<Home> {
                     color: isBooking ? Colors.green : Colors.red,
                   ),
                 ),
+              Icon(
+                isBooking ? Icons.directions_car : Icons.cancel,
+                color: isBooking ? Colors.green : Colors.red,
+                size: 40,
               ),
               GestureDetector(
                 onTap: () => Navigator.pop(context),
@@ -110,33 +110,7 @@ class _HomeState extends State<Home> {
   Widget build(BuildContext context) {
     return Scaffold(
       key: _scaffoldKey,
-      drawer: Drawer(
-        backgroundColor: const Color(0xFFE0FBDB),
-        child: ListView(
-          padding: const EdgeInsets.symmetric(vertical: 60, horizontal: 24),
-          children: [
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const Dashboard()),
-                );
-              },
-              child: const Text('หน้า Dashboard'),
-            ),
-            const SizedBox(height: 12),
-            ElevatedButton(onPressed: () {}, child: const Text('หน้าการจองรถ')),
-            const SizedBox(height: 12),
-            ElevatedButton(
-              onPressed: () {},
-              child: const Text('หน้าแก้ไขข้อมูล'),
-            ),
-            const SizedBox(height: 12),
-            ElevatedButton(onPressed: () {}, child: const Text('ออกจากระบบ')),
-          ],
-        ),
-      ),
-
+      drawer: hamburger(context),
       backgroundColor: const Color(0xFFE0FBDB),
       body: Column(
         children: [
@@ -193,7 +167,15 @@ class _HomeState extends State<Home> {
                   ),
                 ),
                 onPressed: selectedSlot != null && isAvailable[selectedSlot!]
-                    ? () => showCustomPopup(true)
+                    ? () {
+                        showCustomPopup(true);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const ParkingBookingPage(),
+                          ),
+                        );
+                      }
                     : null,
                 child: const Text("จอง", style: TextStyle(color: Colors.white)),
               ),
