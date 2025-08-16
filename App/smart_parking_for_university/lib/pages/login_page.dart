@@ -2,13 +2,42 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:smart_parking_for_university/pages/home.dart';
 import 'package:smart_parking_for_university/pages/registor_page.dart';
+import 'package:smart_parking_for_university/services/api_service.dart';
 
-class LoginPage extends StatelessWidget {
+class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
+
+  @override
+  State<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
+  final _email = TextEditingController();
+  final _password = TextEditingController();
+  final _api = ApiService();
+  String? _error;
+
+  Future<void> _doLogin() async {
+    try {
+      await _api.login(_email.text, _password.text);
+    } catch (e) {
+      setState(() {
+        _error = e.toString(); // จะได้ "User not found."
+        print(_error);
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          print("email :${_email.text}");
+          print("password :${_password.text}");
+          _doLogin();
+        },
+      ),
       backgroundColor: const Color(0xFFE0FBDB),
       body: Center(
         child: SingleChildScrollView(
@@ -72,6 +101,7 @@ class LoginPage extends StatelessWidget {
                   children: [
                     // Email
                     TextField(
+                      controller: _email,
                       decoration: InputDecoration(
                         hintText: 'Email',
                         border: OutlineInputBorder(
@@ -92,6 +122,7 @@ class LoginPage extends StatelessWidget {
 
                     // Password
                     TextField(
+                      controller: _password,
                       obscureText: true,
                       decoration: InputDecoration(
                         hintText: 'Password',
