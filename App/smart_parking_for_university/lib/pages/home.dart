@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:smart_parking_for_university/components/menu.dart';
 import 'package:smart_parking_for_university/pages/dashboard.dart';
+import 'package:smart_parking_for_university/pages/parkingbooking.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -166,7 +167,15 @@ class _HomeState extends State<Home> {
                   ),
                 ),
                 onPressed: selectedSlot != null && isAvailable[selectedSlot!]
-                    ? () => showCustomPopup(true)
+                    ? () {
+                        showCustomPopup(true);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const ParkingBookingPage(),
+                          ),
+                        );
+                      }
                     : null,
                 child: const Text("จอง", style: TextStyle(color: Colors.white)),
               ),
