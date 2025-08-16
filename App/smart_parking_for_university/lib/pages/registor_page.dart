@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:smart_parking_for_university/components/menu.dart';
 
 class RegistorPage extends StatefulWidget {
   const RegistorPage({super.key});
@@ -29,23 +30,7 @@ class _RegistorPageState extends State<RegistorPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       key: _scaffoldKey,
-      drawer: Drawer(
-        backgroundColor: const Color(0xFFE0FBDB),
-        child: ListView(
-          padding: const EdgeInsets.symmetric(vertical: 60, horizontal: 24),
-          children: [
-            ElevatedButton(onPressed: () {}, child: const Text('หน้าการจองรถ')),
-            const SizedBox(height: 12),
-            ElevatedButton(
-              onPressed: () {},
-              child: const Text('หน้าแก้ไขข้อมูล'),
-            ),
-            const SizedBox(height: 12),
-            ElevatedButton(onPressed: () {}, child: const Text('ออกจากระบบ')),
-          ],
-        ),
-      ),
-
+      drawer: hamburger(context),
       backgroundColor: const Color(0xFFE0FBDB),
       body: Stack(
         children: [
