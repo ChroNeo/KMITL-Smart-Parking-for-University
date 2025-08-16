@@ -15,24 +15,55 @@ class ApiException implements Exception {
 }
 
 class ApiService {
-  Future<Map<String, dynamic>> login(String email, String password) async {
+  Future<Map<String, dynamic>> login(
+    String email,
+    String password, {
+    http.Client? client,
+  }) async {
+    final c = client ?? http.Client();
     final uri = Uri.parse('${AppConfig.baseApiUrl}/login');
-    final res = await http.post(
-      uri,
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'email': email, 'password': password}),
-    );
 
-    final data = _safeJson(res.body);
-    if (res.statusCode != 200) {
-      final msg = data['error']?['message'] ?? 'Login failed';
-      throw Exception(msg);
+    try {
+      final res = await c
+          .post(
+            uri,
+            headers: const {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+            },
+            body: jsonEncode({'email': email, 'password': password}),
+          )
+          .timeout(const Duration(seconds: 15));
+
+      final Map<String, dynamic> data = jsonDecode(utf8.decode(res.bodyBytes));
+
+      if (res.statusCode < 200 || res.statusCode >= 300) {
+        final msg =
+            (data['error']?['message'] ?? data['message'] ?? 'Login failed')
+                .toString();
+        throw ApiException(msg, statusCode: res.statusCode);
+      }
+
+      final token = (data['access_token'] ?? data['token'])?.toString();
+      if (token == null || token.isEmpty) {
+        throw ApiException('Missing access token', statusCode: res.statusCode);
+      }
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('jwt', token);
+
+      // ใส่ message เองถ้า backend ไม่ส่งมา
+      data['message'] ??= 'เข้าสู่ระบบสำเร็จ';
+      return data;
+    } on TimeoutException {
+      throw ApiException('Request timed out');
+    } on SocketException {
+      throw ApiException('Network error. Check connection.');
+    } on FormatException {
+      throw ApiException('Invalid JSON.');
+    } finally {
+      if (client == null) c.close();
     }
-
-    final token = data['access_token'] as String;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('jwt', token); // เก็บไว้ใช้ต่อ
-    return data; // มี { token, user, ... }
   }
 
   Future<Map<String, dynamic>> register(
