@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:smart_parking_for_university/pages/dashboard.dart';
+import 'package:smart_parking_for_university/pages/edit_page.dart';
+import 'package:smart_parking_for_university/pages/home.dart';
+import 'package:smart_parking_for_university/pages/login_page.dart';
 
 Widget hamburger(context){
   return Drawer(
@@ -18,14 +21,31 @@ Widget hamburger(context){
               child: const Text('หน้า Dashboard'),
             ),
             const SizedBox(height: 12),
-            ElevatedButton(onPressed: () {}, child: const Text('หน้าการจองรถ')),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const Home()),
+                );
+            }, child: const Text('หน้าการจองรถ')),
             const SizedBox(height: 12),
             ElevatedButton(
-              onPressed: () {},
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const EditCarPage()),
+                );
+              },
               child: const Text('หน้าแก้ไขข้อมูล'),
             ),
             const SizedBox(height: 12),
-            ElevatedButton(onPressed: () {}, child: const Text('ออกจากระบบ')),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const LoginPage()),
+                );
+              }, child: const Text('ออกจากระบบ')),
           ],
         ),
       );
