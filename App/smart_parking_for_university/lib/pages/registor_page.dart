@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:smart_parking_for_university/pages/edit_page.dart';
+import 'package:smart_parking_for_university/components/menu.dart';
 
 class RegistorPage extends StatefulWidget {
   const RegistorPage({super.key});
@@ -38,12 +39,7 @@ class _RegistorPageState extends State<RegistorPage> {
             ElevatedButton(onPressed: () {}, child: const Text('หน้าการจองรถ')),
             const SizedBox(height: 12),
             ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const EditCarPage()),
-                );
-              },
+              onPressed: () {},
               child: const Text('หน้าแก้ไขข้อมูล'),
             ),
             const SizedBox(height: 12),
