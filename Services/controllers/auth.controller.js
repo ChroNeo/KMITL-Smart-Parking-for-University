@@ -88,6 +88,7 @@ const register = async (req, res) => {
     password,
     car_brand,
     car_registration,
+    car_province // <-- add this
   } = req.body || {};
 
   // 422 – validation
@@ -98,6 +99,7 @@ const register = async (req, res) => {
     !password && { field: "password", issue: "required" },
     !car_brand && { field: "car_brand", issue: "required" },
     !car_registration && { field: "car_registration", issue: "required" },
+    !car_province && { field: "car_province", issue: "required" } // <-- add this
   ].filter(Boolean);
 
   if (missing.length) {
@@ -115,9 +117,9 @@ const register = async (req, res) => {
     const passwordHash = await bcrypt.hash(password, 12);
 
     const [result] = await conn.query(
-      `INSERT INTO users (email, full_name, phone_number, password_hash, car_brand, car_registration)
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      [email, fullname, phone_number, passwordHash, car_brand, car_registration]
+      `INSERT INTO users (email, full_name, phone_number, password_hash, car_brand, car_registration, car_province)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [email, fullname, phone_number, passwordHash, car_brand, car_registration, car_province] // <-- add car_province
     );
 
     if (result.affectedRows !== 1) {
@@ -126,7 +128,7 @@ const register = async (req, res) => {
 
     const [userRows] = await conn.query(
       `SELECT user_id AS id, email, full_name AS fullname, phone_number,
-              car_brand, car_registration, created_at
+              car_brand, car_registration, car_province, created_at
          FROM users WHERE user_id = ?`,
       [result.insertId]
     );

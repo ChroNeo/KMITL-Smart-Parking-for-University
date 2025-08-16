@@ -81,6 +81,7 @@ route.post("/login", login);
  *               - password
  *               - car_brand
  *               - car_registration
+ *               - car_province
  *             properties:
  *               email:
  *                 type: string
@@ -102,6 +103,9 @@ route.post("/login", login);
  *               car_registration:
  *                 type: string
  *                 description: Registration number of the user's car
+ *               car_province:
+ *                 type: string
+ *                 description: Province of the user's car registration
  *     responses:
  *       201:
  *         description: User registered successfully.
