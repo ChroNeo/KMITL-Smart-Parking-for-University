@@ -1,12 +1,11 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:smart_parking_for_university/config.dart';
 
 class ApiService {
-  final String baseUrl = "http://10.0.2.2:3000/api/v1";
-
   Future<Map<String, dynamic>> login(String email, String password) async {
-    final uri = Uri.parse('$baseUrl/login');
+    final uri = Uri.parse('${AppConfig.baseApiUrl}/login');
     final res = await http.post(
       uri,
       headers: {'Content-Type': 'application/json'},
@@ -21,8 +20,8 @@ class ApiService {
 
     final token = data['access_token'] as String;
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('jwt', token);               // เก็บไว้ใช้ต่อ
-    return data;                                       // มี { token, user, ... }
+    await prefs.setString('jwt', token); // เก็บไว้ใช้ต่อ
+    return data; // มี { token, user, ... }
   }
 
   Future<String?> getToken() async {
@@ -36,17 +35,36 @@ class ApiService {
   }
 
   Map<String, dynamic> _safeJson(String s) {
-    try { return jsonDecode(s) as Map<String, dynamic>; }
-    catch (_) { return {'raw': s}; }
+    try {
+      return jsonDecode(s) as Map<String, dynamic>;
+    } catch (_) {
+      return {'raw': s};
+    }
+  }
+
+  Future<String?> getMe() async {
+    final token = await getToken();
+    final uri = Uri.parse('${AppConfig.baseApiUrl}/me');
+    final res = await http.get(
+      uri,
+      headers: {'authorization': 'Bearer $token'},
+    );
+    if (res.statusCode != 200) {
+      final data = _safeJson(res.body);
+      final msg = data['error']?['message'] ?? 'Request failed';
+      throw Exception(msg);
+    }
+    return jsonDecode(res.body);
   }
 
   // ตัวอย่างยิง API ที่ต้องใช้โทเคน
   Future<dynamic> getSlotsStatus() async {
     final token = await getToken();
-    final uri = Uri.parse('$baseUrl/slots/status');
-    final res = await http.get(uri, headers: {
-      'authorization': 'Bearer $token',
-    });
+    final uri = Uri.parse('${AppConfig.baseApiUrl}/slots/status');
+    final res = await http.get(
+      uri,
+      headers: {'authorization': 'Bearer $token'},
+    );
     if (res.statusCode != 200) {
       final data = _safeJson(res.body);
       final msg = data['error']?['message'] ?? 'Request failed';

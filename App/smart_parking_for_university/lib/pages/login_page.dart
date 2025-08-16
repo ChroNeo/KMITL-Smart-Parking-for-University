@@ -33,8 +33,6 @@ class _LoginPageState extends State<LoginPage> {
     return Scaffold(
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          print("email :${_email.text}");
-          print("password :${_password.text}");
           _doLogin();
         },
       ),
