@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:smart_parking_for_university/components/menu.dart';
+import 'package:smart_parking_for_university/models/slot_status.dart';
 import 'package:smart_parking_for_university/pages/dashboard.dart';
 import 'package:smart_parking_for_university/pages/parkingbooking.dart';
+import 'package:smart_parking_for_university/services/api_service.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -11,10 +13,60 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
+  final _api = ApiService();
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  List<bool> isAvailable = [false, true, true, true, true];
+  // Dummy data for fallback
+  final List<Map<String, dynamic>> dummySlots = [
+    {"slot_number": 1, "slot_name": "A1", "status": "FREE"},
+    {"slot_number": 2, "slot_name": "A2", "status": "FREE"},
+    {"slot_number": 3, "slot_name": "A3", "status": "FREE"},
+    {"slot_number": 4, "slot_name": "B1", "status": "OCCUPIED"},
+    {"slot_number": 5, "slot_name": "B2", "status": "RESERVED"},
+    {"slot_number": 6, "slot_name": "B3", "status": "DISABLED"},
+  ];
+
+  List<Map<String, dynamic>> slots = [];
   int? selectedSlot;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchSlots();
+  }
+
+  // 2) ใช้ items ให้ถูก + เคลียร์ selection ให้ปลอดภัย
+  Future<void> fetchSlots() async {
+    try {
+      final res = await _api.getSlotsStatus();
+      final items = res['items'];
+
+      if (items is List && items.isNotEmpty) {
+        setState(() {
+          slots = List<Map<String, dynamic>>.from(items);
+          final outOfRange =
+              selectedSlot == null ||
+              selectedSlot! < 0 ||
+              selectedSlot! >= slots.length;
+          final statusOk =
+              !outOfRange &&
+              SlotStatusX.fromString(slots[selectedSlot!]['status'] ?? '') ==
+                  SlotStatus.free;
+          if (!statusOk) selectedSlot = null;
+        });
+      } else {
+        setState(() {
+          slots = dummySlots;
+          selectedSlot = null;
+        });
+      }
+    } catch (_) {
+      setState(() {
+        slots = dummySlots;
+        selectedSlot = null;
+      });
+    }
+  }
 
   void showCustomPopup(bool isBooking) {
     showDialog(
@@ -33,13 +85,13 @@ class _HomeState extends State<Home> {
             children: [
               const SizedBox(width: 12),
               Text(
-                  isBooking ? "จองที่จอดสำเร็จ" : "ยกเลิกที่จอดรถ",
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: isBooking ? Colors.green : Colors.red,
-                  ),
+                isBooking ? "จองที่จอดสำเร็จ" : "ยกเลิกที่จอดรถ",
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: isBooking ? Colors.green : Colors.red,
                 ),
+              ),
               Icon(
                 isBooking ? Icons.directions_car : Icons.cancel,
                 color: isBooking ? Colors.green : Colors.red,
@@ -56,18 +108,20 @@ class _HomeState extends State<Home> {
     );
   }
 
+  bool isSlotAvailable(String status) =>
+      SlotStatusX.fromString(status) == SlotStatus.free;
+
   Widget parkingSlot(int index) {
-    bool available = isAvailable[index];
-    bool isSelected = selectedSlot == index;
+    if (index < 0 || index >= slots.length) return const SizedBox.shrink();
+    final slot = slots[index];
+    final statusStr = slot['status']?.toString() ?? 'DISABLED';
+    final status = SlotStatusX.fromString(statusStr);
+
+    final available = status == SlotStatus.free;
+    final isSelected = selectedSlot == index;
 
     return GestureDetector(
-      onTap: available
-          ? () {
-              setState(() {
-                selectedSlot = index;
-              });
-            }
-          : null,
+      onTap: available ? () => setState(() => selectedSlot = index) : null,
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 16),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -82,22 +136,18 @@ class _HomeState extends State<Home> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text("ช่องจอดรถที่ ${index + 1}"),
+            Text("ช่องจอดรถที่ ${slot['slot_name'] ?? (index + 1)}"),
             Row(
               children: [
                 Text(
-                  available ? "ว่าง" : "ไม่ว่าง",
+                  status.thai,
                   style: TextStyle(
-                    color: available ? Colors.green : Colors.red,
+                    color: status.color,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 const SizedBox(width: 6),
-                Icon(
-                  Icons.circle,
-                  size: 16,
-                  color: available ? Colors.green : Colors.red,
-                ),
+                Icon(Icons.circle, size: 16, color: status.color),
               ],
             ),
           ],
@@ -108,6 +158,12 @@ class _HomeState extends State<Home> {
 
   @override
   Widget build(BuildContext context) {
+    final bool canBook =
+        selectedSlot != null &&
+        slots.isNotEmpty &&
+        isSlotAvailable(slots[selectedSlot!]["status"] ?? "");
+    final bool canCancel = selectedSlot != null && slots.isNotEmpty;
+
     return Scaffold(
       key: _scaffoldKey,
       drawer: hamburger(context),
@@ -147,9 +203,21 @@ class _HomeState extends State<Home> {
           ),
           const SizedBox(height: 16),
           Expanded(
-            child: ListView.builder(
-              itemCount: isAvailable.length,
-              itemBuilder: (context, index) => parkingSlot(index),
+            child: RefreshIndicator(
+              onRefresh: fetchSlots,
+              child: slots.isEmpty
+                  ? ListView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      children: const [
+                        SizedBox(height: 200),
+                        Center(child: CircularProgressIndicator()),
+                        SizedBox(height: 400), // เผื่อให้ลากได้
+                      ],
+                    )
+                  : ListView.builder(
+                      itemCount: slots.length,
+                      itemBuilder: (context, index) => parkingSlot(index),
+                    ),
             ),
           ),
           Row(
@@ -166,7 +234,7 @@ class _HomeState extends State<Home> {
                     vertical: 12,
                   ),
                 ),
-                onPressed: selectedSlot != null && isAvailable[selectedSlot!]
+                onPressed: canBook
                     ? () {
                         showCustomPopup(true);
                         Navigator.push(
@@ -192,9 +260,7 @@ class _HomeState extends State<Home> {
                     vertical: 12,
                   ),
                 ),
-                onPressed: selectedSlot != null
-                    ? () => showCustomPopup(false)
-                    : null,
+                onPressed: canCancel ? () => showCustomPopup(false) : null,
                 child: const Text("ยกเลิก"),
               ),
             ],
