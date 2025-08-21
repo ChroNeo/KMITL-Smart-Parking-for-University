@@ -248,7 +248,9 @@ class _HomeState extends State<Home> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const ParkingBookingPage(),
+                            builder: (context) => ParkingBookingPage(
+                              slot_number: slot_number,
+                            ),
                           ),
                         );
                       }

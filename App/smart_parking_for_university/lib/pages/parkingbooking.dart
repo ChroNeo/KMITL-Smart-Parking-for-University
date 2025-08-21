@@ -3,7 +3,9 @@ import 'package:intl/intl.dart';
 import 'package:smart_parking_for_university/services/api_service.dart';
 
 class ParkingBookingPage extends StatefulWidget {
-  const ParkingBookingPage({super.key});
+  const ParkingBookingPage({super.key, required this.slot_number});
+
+  final int? slot_number;
 
   @override
   State<ParkingBookingPage> createState() => _ParkingBookingPageState();
@@ -104,7 +106,7 @@ class _ParkingBookingPageState extends State<ParkingBookingPage> {
             Icon(Icons.directions_car, size: 56, color: Colors.black87),
             const SizedBox(height: 8),
             Text(
-              'จองที่จอด',
+              'จองที่จอดรถช่อง ${widget.slot_number}',
               style: TextStyle(
                 fontSize: 32,
                 fontWeight: FontWeight.w800,
@@ -213,7 +215,6 @@ class _ParkingBookingPageState extends State<ParkingBookingPage> {
                           : null,
                     ),
                     const SizedBox(height: 24),
-
                   ],
                 ),
               ),
