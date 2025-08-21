@@ -44,7 +44,7 @@ class MainApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      initialRoute: "/login",
+      initialRoute: isAuthenticated ? "/home" : "/login", // Redirect based on authentication
       routes: {
         "/login": (context) => LoginPage(),
         "/registor": (context) => RegistorPage(),
