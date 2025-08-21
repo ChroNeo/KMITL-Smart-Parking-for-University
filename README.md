@@ -20,7 +20,7 @@ Flutter IOT Project KMITL
 ## 3. Slots API
 - [x] `GET /api/v1/slots`  
   คืนรายการช่องจอด พร้อมสถานะ (FREE, RESERVED, OCCUPIED, DISABLED)  
-- [ ] `GET /api/v1/slots/:id` *(optional)*  
+- [x] `GET /api/v1/slots/:id` *(optional)*  
   รายละเอียดของช่องจอดเดียว
 
 ## 4. Reservations API
