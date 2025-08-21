@@ -21,7 +21,7 @@ class _EditCarPageState extends State<EditCarPage> {
   final passwordCtrl = TextEditingController();
 
   // Colors
-  final bg = const Color(0xFFEFFBEF); // เขียวอ่อนพื้นหลัง
+  final bg = const Color(0xFFE0FBDB); // เขียวอ่อนพื้นหลัง
   final primaryGreen = const Color(0xFF3BAA4B);
   final darkText = const Color(0xFF222222);
   final chipGreen = const Color(0xFF2F9E44);
@@ -33,15 +33,15 @@ class _EditCarPageState extends State<EditCarPage> {
       fillColor: Colors.white,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(18),
-        borderSide: BorderSide(color: Colors.grey.shade300, width: 1),
+        borderRadius: BorderRadius.circular(24),
+        borderSide: BorderSide(color: const Color(0xFF2F9E44), width: 1),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(18),
-        borderSide: BorderSide(color: Colors.grey.shade300, width: 1),
+        borderRadius: BorderRadius.circular(24),
+        borderSide: BorderSide(color: const Color(0xFF2F9E44), width: 1),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(24),
         borderSide: BorderSide(color: primaryGreen, width: 1.4),
       ),
     );
@@ -92,7 +92,7 @@ class _EditCarPageState extends State<EditCarPage> {
         title: Column(
           children: [
             const Icon(
-              Icons.directions_car_filled,
+              Icons.directions_car,
               size: 42,
               color: Colors.black87,
             ),
