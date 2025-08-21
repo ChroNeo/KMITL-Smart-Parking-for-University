@@ -139,7 +139,17 @@ class ApiService {
     }
     return jsonDecode(res.body);
   }
-
+  Future<bool> hasJWT() async {
+  try {
+    final res = await http.get(
+      Uri.parse('${AppConfig.baseApiUrl}/me'),
+      headers: {'Authorization': 'Bearer ${await getToken()}'},
+    );
+    return res.statusCode == 200;
+  } catch (e) {
+    return false;
+  }
+}
   // ตัวอย่างยิง API ที่ต้องใช้โทเคน
   Future<dynamic> getSlotsStatus() async {
     final token = await getToken();
