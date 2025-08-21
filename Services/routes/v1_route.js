@@ -5,7 +5,7 @@ const {
   getMe,
   updateMe,
 } = require("../controllers/auth.controller"); // แก้ registor → register
-const { getStatus } = require("../controllers/slots.controller");
+const { getStatus, getSlotById, getSlotDetail } = require("../controllers/slots.controller");
 const auth = require("../middleware/auth.middleware");
 const { reservation } = require("../controllers/reservation.controller");
 const route = express.Router();
@@ -150,6 +150,7 @@ route.post("/register", register);
  *         description: Failed to fetch slot status
  */
 route.get("/slots/status", getStatus);
+route.get("/slots/:id",auth, getSlotDetail);
 route.put("/me", auth, updateMe);
 /**
  * @swagger
