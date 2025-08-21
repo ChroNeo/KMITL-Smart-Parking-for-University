@@ -28,7 +28,7 @@ class _HomeState extends State<Home> {
 
   List<Map<String, dynamic>> slots = [];
   int? selectedSlot;
-
+  int? slot_number;
   @override
   void initState() {
     super.initState();
@@ -121,7 +121,15 @@ class _HomeState extends State<Home> {
     final isSelected = selectedSlot == index;
 
     return GestureDetector(
-      onTap: available ? () => setState(() => selectedSlot = index) : null,
+      onTap: available
+          ? () {
+              print(slot);
+              setState(() {
+                selectedSlot = index;
+                slot_number = slot['slot_number'] ?? 'N/A';
+              });
+            }
+          : null,
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 16),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
