@@ -115,7 +115,7 @@ class ApiService {
   Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('jwt');
-  }
+  }// Helper function to safely parse JSON
 
   Map<String, dynamic> _safeJson(String s) {
     try {
