@@ -15,27 +15,54 @@ class _LoginPageState extends State<LoginPage> {
   final _email = TextEditingController();
   final _password = TextEditingController();
   final _api = ApiService();
+
   String? _error;
+  bool _loading = false;
 
   Future<void> _doLogin() async {
+    setState(() {
+      _error = null;
+      _loading = true;
+    });
+
     try {
-      await _api.login(_email.text, _password.text);
+      // เรียก API
+      await _api.login(_email.text.trim(), _password.text);
+
+      if (!mounted) return;
+      // สำเร็จ -> ไปหน้า Home และป้องกันกลับด้วย back
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const Home()),
+      );
     } catch (e) {
+      // ล้มเหลว -> แสดงข้อความผิดพลาด
       setState(() {
-        _error = e.toString(); // จะได้ "User not found."
-        print(_error);
+        _error = e.toString();
       });
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(_error ?? 'Login failed')));
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _loading = false);
+      }
     }
+  }
+
+  @override
+  void dispose() {
+    _email.dispose();
+    _password.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          _doLogin();
-        },
-      ),
+      floatingActionButton: null,
       backgroundColor: const Color(0xFFE0FBDB),
       body: Center(
         child: SingleChildScrollView(
@@ -43,6 +70,7 @@ class _LoginPageState extends State<LoginPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              // Header
               Column(
                 children: [
                   const Text(
@@ -81,7 +109,9 @@ class _LoginPageState extends State<LoginPage> {
                 ],
               ),
 
-              // card
+              const SizedBox(height: 16),
+
+              // Card
               Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
@@ -100,6 +130,8 @@ class _LoginPageState extends State<LoginPage> {
                     // Email
                     TextField(
                       controller: _email,
+                      keyboardType: TextInputType.emailAddress,
+                      textInputAction: TextInputAction.next,
                       decoration: InputDecoration(
                         hintText: 'Email',
                         border: OutlineInputBorder(
@@ -122,6 +154,8 @@ class _LoginPageState extends State<LoginPage> {
                     TextField(
                       controller: _password,
                       obscureText: true,
+                      textInputAction: TextInputAction.done,
+                      onSubmitted: (_) => _loading ? null : _doLogin(),
                       decoration: InputDecoration(
                         hintText: 'Password',
                         border: OutlineInputBorder(
@@ -138,9 +172,25 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                       ),
                     ),
+
+                    // Error message
+                    if (_error != null) ...[
+                      const SizedBox(height: 12),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          _error!,
+                          style: const TextStyle(
+                            color: Colors.red,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                    ],
+
                     const SizedBox(height: 24),
 
-                    // Button
+                    //Button
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
@@ -151,20 +201,25 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                           backgroundColor: Colors.green,
                         ),
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const Home(),
-                            ),
-                          );
-                        },
-                        child: const Text(
-                          'Login',
-                          style: TextStyle(color: Colors.white, fontSize: 18),
-                        ),
+                        onPressed: _loading ? null : _doLogin,
+                        child: _loading
+                            ? const SizedBox(
+                                height: 22,
+                                width: 22,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Text(
+                                'Login',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                ),
+                              ),
                       ),
                     ),
+
                     const SizedBox(height: 16),
 
                     // Sign up
@@ -173,14 +228,16 @@ class _LoginPageState extends State<LoginPage> {
                       children: [
                         const Text("Don’t have an account? "),
                         GestureDetector(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const RegistorPage(),
-                              ),
-                            );
-                          },
+                          onTap: _loading
+                              ? null
+                              : () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => const RegistorPage(),
+                                    ),
+                                  );
+                                },
                           child: const Text(
                             "Sign Up",
                             style: TextStyle(
