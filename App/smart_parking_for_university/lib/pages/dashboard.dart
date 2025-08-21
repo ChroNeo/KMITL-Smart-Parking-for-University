@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:smart_parking_for_university/components/menu.dart';
 import 'package:fl_chart/fl_chart.dart';
 
 class Dashboard extends StatefulWidget {
@@ -10,6 +10,9 @@ class Dashboard extends StatefulWidget {
 }
 
 class _DashboardState extends State<Dashboard> {
+  // เพิ่มการประกาศ _scaffoldKey ที่ขาดหายไป
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
   // กำหนดสีที่จะใช้
   final Color _bgLight = const Color(0xFFE0FBDB);
   final Color _green = const Color(0xFF4CAF50);
@@ -37,48 +40,65 @@ class _DashboardState extends State<Dashboard> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _bgLight,
-      appBar: AppBar(
-        backgroundColor: _bgLight,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.menu),
-          color: Colors.black87,
-          onPressed: () {}, // ยังไม่มีการทำงาน
-        ),
-      ),
+      key: _scaffoldKey,
+      drawer: hamburger(context),
+      backgroundColor: const Color(0xFFE0FBDB),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 8),
-            Center(
-              child: Column(
+            Padding(
+              padding: const EdgeInsets.only(
+                top: 40,
+                left: 16,
+                right: 16,
+                bottom: 8,
+              ),
+              child: Row(
                 children: [
-                  const Icon(
-                    Icons.directions_car,
-                    size: 56,
-                    color: Colors.black87,
+                  IconButton(
+                    icon: const Icon(Icons.menu),
+                    onPressed: () => _scaffoldKey.currentState?.openDrawer(),
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Dashboard',
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.w800,
-                      color: _green,
-                    ),
-                  ),
+                  const Spacer(),
                 ],
               ),
             ),
-            const SizedBox(height: 24),
-            // Weekly Statistics Card
-            _buildStatisticsCard(),
-            const SizedBox(height: 24),
-            // Parking Space Card
-            _buildParkingCard(),
+            // เนื้อหาส่วนนี้ถูกย้ายเข้ามาใน SingleChildScrollView
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 8),
+                  Center(
+                    child: Column(
+                      children: [
+                        const Icon(
+                          Icons.directions_car,
+                          size: 56,
+                          color: Colors.black87,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Dashboard',
+                          style: TextStyle(
+                            fontSize: 32,
+                            fontWeight: FontWeight.w800,
+                            color: _green,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  // Weekly Statistics Card
+                  _buildStatisticsCard(),
+                  const SizedBox(height: 24),
+                  // Parking Space Card
+                  _buildParkingCard(),
+                ],
+              ),
+            ),
           ],
         ),
       ),
@@ -197,9 +217,9 @@ class _DashboardState extends State<Dashboard> {
                     vertical: 14,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.white, // พื้นขาว
-                    borderRadius: BorderRadius.circular(24), // ทรงแคปซูล
-                    border: Border.all(color: _green, width: 2), // ขอบเขียว
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(color: _green, width: 1),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
