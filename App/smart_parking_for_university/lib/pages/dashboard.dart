@@ -42,7 +42,7 @@ class _DashboardState extends State<Dashboard> {
         backgroundColor: _bgLight,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.menu), 
+          icon: const Icon(Icons.menu),
           color: Colors.black87,
           onPressed: () {}, // ยังไม่มีการทำงาน
         ),
@@ -56,7 +56,11 @@ class _DashboardState extends State<Dashboard> {
             Center(
               child: Column(
                 children: [
-                  const Icon(Icons.directions_car, size: 56, color: Colors.black87),
+                  const Icon(
+                    Icons.directions_car,
+                    size: 56,
+                    color: Colors.black87,
+                  ),
                   const SizedBox(height: 8),
                   Text(
                     'Dashboard',
@@ -86,7 +90,7 @@ class _DashboardState extends State<Dashboard> {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFFF6F6F6),
+        color: const Color(0xFFFFFFFF),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
@@ -146,12 +150,13 @@ class _DashboardState extends State<Dashboard> {
     );
   }
 
+  /// ====== ส่วนที่แก้ให้เป็น "แคปซูลขอบเขียว" ======
   Widget _buildParkingCard() {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color.fromRGBO(255, 255, 255, 1),
+        color: const Color(0xFFFFFFFF),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
@@ -178,31 +183,34 @@ class _DashboardState extends State<Dashboard> {
             ],
           ),
           const SizedBox(height: 12),
-          // สร้างรายการที่จอดรถจากข้อมูลจำลอง
           ListView.builder(
-            shrinkWrap: true, // ทำให้ ListView ใช้พื้นที่เท่าที่จำเป็น
-            physics: const NeverScrollableScrollPhysics(), // ป้องกันการเลื่อนซ้อนกัน
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
             itemCount: parkingData.length,
             itemBuilder: (context, index) {
               final item = parkingData[index];
               return Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
                   decoration: BoxDecoration(
-                    color: _bgLight.withOpacity(0.5),
-                    borderRadius: BorderRadius.circular(16),
+                    color: Colors.white, // พื้นขาว
+                    borderRadius: BorderRadius.circular(24), // ทรงแคปซูล
+                    border: Border.all(color: _green, width: 2), // ขอบเขียว
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        item['space'],
-                        style: const TextStyle(fontSize: 16),
-                      ),
+                      Text(item['space'], style: const TextStyle(fontSize: 16)),
                       Text(
                         '${item['cars']}',
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ],
                   ),
