@@ -6,25 +6,25 @@ Flutter IOT Project KMITL
 โครงร่าง API สำหรับระบบ Smart Parking (ESP32 + Node.js + MySQL + MQTT)  
 
 ## 1. Auth API
-- [ ] `POST /api/v1/login`  
+- [x] `POST /api/v1/login`  
   ตรวจสอบ email + password, คืน JWT  
-- [ ] `POST /api/v1/register`  
+- [x] `POST /api/v1/register`  
   สมัครสมาชิกใหม่, hash password (bcrypt)
 
 ## 2. Profile API
-- [ ] `GET /api/v1/me`  
+- [x] `GET /api/v1/me`  
   ใช้ JWT เพื่อดึงข้อมูล user  
-- [ ] `PUT /api/v1/me`  
+- [x] `PUT /api/v1/me`  
   แก้ไขข้อมูลโปรไฟล์ของผู้ใช้
 
 ## 3. Slots API
-- [ ] `GET /api/v1/slots`  
+- [x] `GET /api/v1/slots`  
   คืนรายการช่องจอด พร้อมสถานะ (FREE, RESERVED, OCCUPIED, DISABLED)  
 - [ ] `GET /api/v1/slots/:id` *(optional)*  
   รายละเอียดของช่องจอดเดียว
 
 ## 4. Reservations API
-- [ ] `POST /api/v1/reservations`  
+- [x] `POST /api/v1/reservations`  
   สร้างการจองที่จอด (ตรวจสอบ slot ว่าง → จอง → set `expires_at`)  
 - [ ] `GET /api/v1/reservations`  
   ดึงรายการจองของผู้ใช้  
