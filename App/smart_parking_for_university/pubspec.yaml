@@ -13,7 +13,11 @@ dependencies:
   flutter_svg: ^2.0.10
   http: ^1.5.0
   shared_preferences: ^2.5.3
+<<<<<<< HEAD
   jwt_decoder: ^2.0.1
+=======
+  fl_chart: ^0.67.0
+>>>>>>> ui/dashboard
 
 dev_dependencies:
   flutter_test:
