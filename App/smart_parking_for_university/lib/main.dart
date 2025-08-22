@@ -51,7 +51,7 @@ class MainApp extends StatelessWidget {
         "/home": (context) => Home(),
         "/dashboard": (context) => Dashboard(),
         "/edit": (context) => EditCarPage(),
-        "/parkingbooking": (context) => ParkingBookingPage(),
+        // "/parkingbooking": (context) => ParkingBookingPage(),
       },
     );
   }

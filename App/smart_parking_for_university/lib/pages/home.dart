@@ -18,17 +18,16 @@ class _HomeState extends State<Home> {
 
   // Dummy data for fallback
   final List<Map<String, dynamic>> dummySlots = [
-    {"slot_number": 1, "slot_name": "A1", "status": "FREE"},
-    {"slot_number": 2, "slot_name": "A2", "status": "FREE"},
-    {"slot_number": 3, "slot_name": "A3", "status": "FREE"},
-    {"slot_number": 4, "slot_name": "B1", "status": "OCCUPIED"},
-    {"slot_number": 5, "slot_name": "B2", "status": "RESERVED"},
-    {"slot_number": 6, "slot_name": "B3", "status": "DISABLED"},
+    {"slot_number": 1, "slot_name": "1", "status": "FREE"},
+    {"slot_number": 2, "slot_name": "2", "status": "FREE"},
+    {"slot_number": 3, "slot_name": "3", "status": "OCCUPIED"},
+    {"slot_number": 4, "slot_name": "4", "status": "RESERVED"},
+    {"slot_number": 5, "slot_name": "5", "status": "DISABLED"},
   ];
 
   List<Map<String, dynamic>> slots = [];
   int? selectedSlot;
-
+  int? slot_number;
   @override
   void initState() {
     super.initState();
@@ -121,7 +120,15 @@ class _HomeState extends State<Home> {
     final isSelected = selectedSlot == index;
 
     return GestureDetector(
-      onTap: available ? () => setState(() => selectedSlot = index) : null,
+      onTap: available
+          ? () {
+              print(slot);
+              setState(() {
+                selectedSlot = index;
+                slot_number = slot['slot_number'] ?? 'N/A';
+              });
+            }
+          : null,
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 16),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -240,7 +247,9 @@ class _HomeState extends State<Home> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const ParkingBookingPage(),
+                            builder: (context) => ParkingBookingPage(
+                              slot_number: slot_number,
+                            ),
                           ),
                         );
                       }
