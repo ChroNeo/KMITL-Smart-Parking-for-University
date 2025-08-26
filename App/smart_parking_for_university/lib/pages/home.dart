@@ -116,7 +116,8 @@ class _HomeState extends State<Home> {
     final statusStr = slot['status']?.toString() ?? 'DISABLED';
     final status = SlotStatusX.fromString(statusStr);
 
-    final available = status == SlotStatus.free;
+    final available =
+        status == SlotStatus.free || status == SlotStatus.reserved;
     final isSelected = selectedSlot == index;
 
     return GestureDetector(
@@ -168,7 +169,14 @@ class _HomeState extends State<Home> {
     final bool canBook =
         selectedSlot != null &&
         slots.isNotEmpty &&
-        isSlotAvailable(slots[selectedSlot!]["status"] ?? "");
+        (isSlotAvailable(slots[selectedSlot!]["status"] ?? "") ||
+            SlotStatusX.fromString(slots[selectedSlot!]["status"] ?? "") ==
+                SlotStatus.reserved);
+    final bool isReserved =
+        selectedSlot != null &&
+        slots.isNotEmpty &&
+        SlotStatusX.fromString(slots[selectedSlot!]["status"] ?? "") ==
+            SlotStatus.reserved;
     final bool canCancel = selectedSlot != null && slots.isNotEmpty;
 
     return Scaffold(
@@ -243,18 +251,30 @@ class _HomeState extends State<Home> {
                 ),
                 onPressed: canBook
                     ? () {
-                        showCustomPopup(true);
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => ParkingBookingPage(
-                              slot_number: slot_number,
+                        if (isReserved) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  ParkingBookingPage(slotNumber: slot_number),
                             ),
-                          ),
-                        );
+                          );
+                        } else {
+                          showCustomPopup(true);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  ParkingBookingPage(slotNumber: slot_number),
+                            ),
+                          );
+                        }
                       }
                     : null,
-                child: const Text("จอง", style: TextStyle(color: Colors.white)),
+                child: Text(
+                  isReserved ? "ดู" : "จอง",
+                  style: const TextStyle(color: Colors.white),
+                ),
               ),
               const SizedBox(width: 16),
               ElevatedButton(

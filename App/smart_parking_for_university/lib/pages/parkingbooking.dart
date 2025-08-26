@@ -3,9 +3,8 @@ import 'package:intl/intl.dart';
 import 'package:smart_parking_for_university/services/api_service.dart';
 
 class ParkingBookingPage extends StatefulWidget {
-  const ParkingBookingPage({super.key, required this.slot_number});
-
-  final int? slot_number;
+  final int? slotNumber;
+  const ParkingBookingPage({super.key, required this.slotNumber});
 
   @override
   State<ParkingBookingPage> createState() => _ParkingBookingPageState();
@@ -14,76 +13,51 @@ class ParkingBookingPage extends StatefulWidget {
 class _ParkingBookingPageState extends State<ParkingBookingPage> {
   final _formKey = GlobalKey<FormState>();
   final _api = ApiService();
+  Map<String, dynamic>? reservation;
+  bool loading = true;
+  String? error;
 
-  final _nameCtrl = TextEditingController();
-  final _timeCtrl = TextEditingController();
-  final _plateCtrl = TextEditingController();
-  final _phoneCtrl = TextEditingController();
-  final _codeCtrl = TextEditingController();
+  @override
+  void initState() {
+    super.initState();
+    fetchReservation();
+  }
+
+  Future<void> fetchReservation() async {
+    setState(() {
+      loading = true;
+      error = null;
+    });
+    try {
+      if (widget.slotNumber == null) {
+        setState(() {
+          error = "ไม่พบหมายเลขช่องจอด";
+          loading = false;
+        });
+        return;
+      }
+      final res = await _api.getReservationBySlot(widget.slotNumber!);
+      if (res['success'] == true) {
+        setState(() {
+          reservation = res['data'];
+          loading = false;
+        });
+      } else {
+        setState(() {
+          reservation = res['data'];
+          loading = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        error = e.toString();
+        loading = false;
+      });
+    }
+  }
 
   final _green = const Color(0xFF2EB94C); // เขียวหลักของเส้นขอบ/หัวเรื่อง
   final _bgLight = const Color(0xFFE9FBE9); // พื้นหลังเขียวอ่อน
-
-  @override
-  void dispose() {
-    _nameCtrl.dispose();
-    _timeCtrl.dispose();
-    _plateCtrl.dispose();
-    _phoneCtrl.dispose();
-    _codeCtrl.dispose();
-    super.dispose();
-  }
-
-  InputDecoration _input(String hint) {
-    final radius = BorderRadius.circular(18);
-    final border = OutlineInputBorder(
-      borderRadius: radius,
-      borderSide: BorderSide(color: _green, width: 1.5),
-    );
-    return InputDecoration(
-      hintText: hint,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      enabledBorder: border,
-      focusedBorder: border.copyWith(
-        borderSide: BorderSide(color: _green, width: 2),
-      ),
-    );
-  }
-
-  Future<void> _pickDateTime() async {
-    final now = DateTime.now();
-    final d = await showDatePicker(
-      context: context,
-      firstDate: now.subtract(const Duration(days: 1)),
-      lastDate: now.add(const Duration(days: 365)),
-      initialDate: now,
-      locale: const Locale('th'),
-    );
-    if (d == null) return;
-
-    final t = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.fromDateTime(now),
-      builder: (ctx, child) => MediaQuery(
-        data: MediaQuery.of(ctx).copyWith(alwaysUse24HourFormat: true),
-        child: child!,
-      ),
-    );
-    if (t == null) return;
-
-    final dt = DateTime(d.year, d.month, d.day, t.hour, t.minute);
-    _timeCtrl.text = DateFormat('dd/MM/yyyy HH:mm', 'th').format(dt);
-    setState(() {});
-  }
-
-  void _submit() {
-    if (_formKey.currentState?.validate() ?? false) {
-      // ทำสิ่งที่ต้องการต่อ เช่น ส่งข้อมูลไป backend หรือแสดง dialog ยืนยัน
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('บันทึกข้อมูลการจองเรียบร้อย')),
-      );
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -98,139 +72,143 @@ class _ParkingBookingPageState extends State<ParkingBookingPage> {
           onPressed: () => Navigator.of(context).maybePop(),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-        child: Column(
-          children: [
-            const SizedBox(height: 8),
-            Icon(Icons.directions_car, size: 56, color: Colors.black87),
-            const SizedBox(height: 8),
-            Text(
-              'จองที่จอดรถช่อง ${widget.slot_number}',
-              style: TextStyle(
-                fontSize: 32,
-                fontWeight: FontWeight.w800,
-                color: _green,
-              ),
-            ),
-            const SizedBox(height: 24),
-            // การ์ดฟอร์ม
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 12,
-                    offset: const Offset(0, 6),
-                  ),
-                ],
-              ),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _label('ผู้จอง'),
-                    const SizedBox(height: 8),
-                    TextFormField(
-                      controller: _nameCtrl,
-                      decoration: _input('เช่น สมชาย ใจดี'),
-                      validator: (v) => (v == null || v.trim().isEmpty)
-                          ? 'กรุณากรอกชื่อผู้จอง'
-                          : null,
+      body: loading
+          ? const Center(child: CircularProgressIndicator())
+          : error != null
+          ? Center(
+              child: Text(error!, style: const TextStyle(color: Colors.red)),
+            )
+          : SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+              child: Column(
+                children: [
+                  const SizedBox(height: 8),
+                  Icon(Icons.directions_car, size: 56, color: Colors.black87),
+                  const SizedBox(height: 8),
+                  Text(
+                    'จองที่จอดรถช่อง ${widget.slotNumber}',
+                    style: TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.w800,
+                      color: _green,
                     ),
-                    const SizedBox(height: 20),
-
-                    // แถว: เวลาที่จอง + ป้ายทะเบียน
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _label('เวลาที่จอง'),
-                              const SizedBox(height: 8),
-                              TextFormField(
-                                controller: _timeCtrl,
-                                readOnly: true,
-                                onTap: _pickDateTime,
-                                decoration: _input('เลือกวัน-เวลา'),
-                                validator: (v) => (v == null || v.isEmpty)
-                                    ? 'กรุณาเลือกเวลา'
-                                    : null,
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _label('ป้ายทะเบียน'),
-                              const SizedBox(height: 8),
-                              TextFormField(
-                                controller: _plateCtrl,
-                                textCapitalization:
-                                    TextCapitalization.characters,
-                                decoration: _input('เช่น กก 1234'),
-                                validator: (v) =>
-                                    (v == null || v.trim().isEmpty)
-                                    ? 'กรุณากรอกป้ายทะเบียน'
-                                    : null,
-                              ),
-                            ],
-                          ),
+                  ),
+                  const SizedBox(height: 24),
+                  // Card
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.5),
+                          blurRadius: 12,
+                          offset: const Offset(0, 6),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 20),
-
-                    _label('เบอร์ติดต่อ'),
-                    const SizedBox(height: 8),
-                    TextFormField(
-                      controller: _phoneCtrl,
-                      keyboardType: TextInputType.phone,
-                      decoration: _input('เช่น 0812345678'),
-                      validator: (v) {
-                        final x = v?.replaceAll(' ', '') ?? '';
-                        if (x.isEmpty) return 'กรุณากรอกเบอร์ติดต่อ';
-                        if (x.length < 9) return 'กรุณากรอกเบอร์ให้ถูกต้อง';
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 20),
-
-                    _label('รหัสที่จอง'),
-                    const SizedBox(height: 8),
-                    TextFormField(
-                      controller: _codeCtrl,
-                      decoration: _input('กำหนดรหัสสำหรับการจอง'),
-                      validator: (v) => (v == null || v.trim().isEmpty)
-                          ? 'กรุณากรอกรหัส'
-                          : null,
-                    ),
-                    const SizedBox(height: 24),
-                  ],
-                ),
+                    child: reservation == null
+                        ? const SizedBox()
+                        : Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // If not your slot
+                              if (reservation!['message'] != null) ...[
+                                Text(
+                                  reservation!['message'] ?? '',
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    color: Colors.red,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                                _label('ช่องจอด'),
+                                _value(
+                                  reservation!['slot_name'] ??
+                                      reservation!['slot_number'] ??
+                                      '-',
+                                ),
+                                const SizedBox(height: 12),
+                                _label('สถานะ'),
+                                _value(
+                                  reservation!['reservation_status'] ?? '-',
+                                ),
+                                const SizedBox(height: 12),
+                                _label('จองถึง'),
+                                _value(
+                                  reservation!['reserved_until'],
+                                  isDate: true,
+                                ),
+                              ] else ...[
+                                _label('ช่องจอด'),
+                                _value(
+                                  reservation!['slot_name'] ??
+                                      reservation!['slot_number'] ??
+                                      '-',
+                                ),
+                                const SizedBox(height: 12),
+                                _label('ผู้จอง'),
+                                _value(reservation!['full_name'] ?? '-'),
+                                const SizedBox(height: 12),
+                                _label('ป้ายทะเบียน'),
+                                _value(reservation!['car_registration'] ?? '-'),
+                                const SizedBox(height: 12),
+                                _label('รหัสเข้า'),
+                                _value(reservation!['access_code'] ?? '-'),
+                                const SizedBox(height: 12),
+                                _label('เวลาที่จอง'),
+                                _value(
+                                  reservation!['created_at'],
+                                  isDate: true,
+                                ),
+                                const SizedBox(height: 12),
+                                _label('หมดอายุ'),
+                                _value(
+                                  reservation!['expires_at'],
+                                  isDate: true,
+                                ),
+                                const SizedBox(height: 12),
+                                _label('สถานะ'),
+                                _value(
+                                  reservation!['reservation_status'] ?? '-',
+                                ),
+                              ],
+                            ],
+                          ),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
-      ),
     );
+  }
+
+  String _formatDate(dynamic value) {
+    if (value == null) return '-';
+    try {
+      final dt = DateTime.parse(value.toString()).toLocal();
+      return DateFormat('dd/MM/yyyy HH:mm').format(dt);
+    } catch (_) {
+      return value.toString();
+    }
   }
 
   Widget _label(String text) => Text(
     text,
-    style: const TextStyle(
-      fontSize: 16,
-      fontWeight: FontWeight.w700,
-      color: Colors.black87,
+    style: TextStyle(color: _green, fontWeight: FontWeight.bold, fontSize: 16),
+  );
+
+  Widget _value(dynamic value, {bool isDate = false}) => Padding(
+    padding: const EdgeInsets.only(top: 2, bottom: 8),
+    child: Text(
+      isDate ? _formatDate(value) : (value?.toString() ?? '-'),
+      style: const TextStyle(
+        fontSize: 18,
+        color: Colors.black87,
+        fontWeight: FontWeight.w500,
+      ),
     ),
   );
 }

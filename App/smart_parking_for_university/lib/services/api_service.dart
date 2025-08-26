@@ -215,4 +215,46 @@ class ApiService {
     }
     return data;
   }
+
+  Future<Map<String, dynamic>> getReservationBySlot(int slotNumber) async {
+    final uri = Uri.parse('${AppConfig.baseApiUrl}/reservation/by-slot/$slotNumber');
+    try {
+      final res = await http
+          .get(
+            uri,
+            headers: {
+              'Accept': 'application/json',
+              'authorization': 'Bearer ${await getToken()}',
+            },
+          )
+          .timeout(const Duration(seconds: 15));
+
+      // ใช้ utf8.decode ให้รองรับข้อความไทย
+      final body = utf8.decode(res.bodyBytes);
+      final data = _safeJson(body);
+
+      if (res.statusCode >= 200 && res.statusCode < 300) {
+        return {'success': true, 'status': res.statusCode, 'data': data};
+      }
+      return {'success': false, 'status': res.statusCode, 'data': data};
+    } on TimeoutException {
+      return {
+        'success': false,
+        'status': 408,
+        'data': {'message': 'Request timed out'},
+      };
+    } on SocketException {
+      return {
+        'success': false,
+        'status': 0,
+        'data': {'message': 'Network error. Check connection.'},
+      };
+    } on FormatException {
+      return {
+        'success': false,
+        'status': 0,
+        'data': {'message': 'Invalid JSON.'},
+      };
+    }
+  }
 }
