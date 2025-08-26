@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:smart_parking_for_university/services/api_service.dart';
+import 'package:smart_parking_for_university/models/slot_status.dart';
 
 class ParkingBookingPage extends StatefulWidget {
   final int? slotNumber;
@@ -161,7 +162,7 @@ class _ParkingBookingPageState extends State<ParkingBookingPage> {
                                         ),
                                       ],
                                     ),
-                                    SizedBox(width: 25),
+                                    const SizedBox(width: 25),
                                     Column(
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
@@ -192,9 +193,14 @@ class _ParkingBookingPageState extends State<ParkingBookingPage> {
                                   isDate: true,
                                 ),
                                 const SizedBox(height: 12),
+                                _label('เบอร์ติดต่อ'),
+                                _value(reservation!['phone_number'] ?? '-'),
+                                const SizedBox(height: 12),
                                 _label('สถานะ'),
                                 _value(
-                                  reservation!['reservation_status'] ?? '-',
+                                  ReservStatusX.fromString(
+                                    reservation!['reservation_status'] ?? '-',
+                                  ),
                                 ),
                               ],
                             ],

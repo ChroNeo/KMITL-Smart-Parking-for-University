@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 
 enum SlotStatus { free, occupied, reserved, disabled }
 
+enum ReservStatus { confirmed, cancelled, expired, used }
+
 extension SlotStatusX on SlotStatus {
   String get apiValue => switch (this) {
     SlotStatus.free => 'FREE',
@@ -22,16 +24,44 @@ extension SlotStatusX on SlotStatus {
     SlotStatus.free => 'ว่าง',
     SlotStatus.occupied => 'ไม่ว่าง',
     SlotStatus.reserved => 'จอง',
-    SlotStatus.disabled => 'ไม่พร้อมใช้งาน'
+    SlotStatus.disabled => 'ไม่พร้อมใช้งาน',
   };
 
   static SlotStatus fromString(String s) {
     switch (s.toUpperCase()) {
-      case 'FREE': return SlotStatus.free;
-      case 'OCCUPIED': return SlotStatus.occupied;
-      case 'RESERVED': return SlotStatus.reserved;
-      case 'DISABLED': return SlotStatus.disabled;
-      default: throw Exception('Unknown status: $s');
+      case 'FREE':
+        return SlotStatus.free;
+      case 'OCCUPIED':
+        return SlotStatus.occupied;
+      case 'RESERVED':
+        return SlotStatus.reserved;
+      case 'DISABLED':
+        return SlotStatus.disabled;
+      default:
+        throw Exception('Unknown status: $s');
+    }
+  }
+}
+
+extension ReservStatusX on ReservStatus {
+  String get apiValue => switch (this) {
+    ReservStatus.confirmed => 'CONFIRMED',
+    ReservStatus.cancelled => 'CANCELLED',
+    ReservStatus.expired => 'EXPIRED',
+    ReservStatus.used => 'USED',
+  };
+  static ReservStatus fromString(String s) {
+    switch (s.toUpperCase()) {
+      case 'CONFIRMED':
+        return ReservStatus.confirmed;
+      case 'CANCELLED':
+        return ReservStatus.cancelled;
+      case 'EXPIRED':
+        return ReservStatus.expired;
+      case 'USED':
+        return ReservStatus.used;
+      default:
+        throw Exception('Unknown status: $s');
     }
   }
 }

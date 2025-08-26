@@ -82,7 +82,7 @@ const getReservationBySlot = async (req, res) => {
   try {
     // หา reservation ล่าสุดที่ยังแอคทีฟของช่องนี้
     const [rows] = await conn.query(
-      `SELECT r.*, s.slot_name, u.full_name, u.car_registration
+      `SELECT r.*, s.slot_name, u.full_name, u.car_registration, u.phone_number
        FROM Reservation r
        JOIN Parking_Slots s ON r.slot_number = s.slot_number
        JOIN users u ON r.user_id = u.user_id
@@ -115,6 +115,7 @@ const getReservationBySlot = async (req, res) => {
         created_at: r.created_at,
         expires_at: r.expires_at,
         reservation_status: r.reservation_status,
+        phone_number: r.phone_number
       });
     }
 
