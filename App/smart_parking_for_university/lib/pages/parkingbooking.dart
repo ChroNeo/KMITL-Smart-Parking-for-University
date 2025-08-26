@@ -200,7 +200,7 @@ class _ParkingBookingPageState extends State<ParkingBookingPage> {
                                 _value(
                                   ReservStatusX.fromString(
                                     reservation!['reservation_status'] ?? '-',
-                                  ),
+                                  ).thai,
                                 ),
                               ],
                             ],

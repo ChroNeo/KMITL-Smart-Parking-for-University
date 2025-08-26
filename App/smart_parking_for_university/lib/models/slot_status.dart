@@ -50,6 +50,14 @@ extension ReservStatusX on ReservStatus {
     ReservStatus.expired => 'EXPIRED',
     ReservStatus.used => 'USED',
   };
+
+  String get thai => switch (this) {
+    ReservStatus.confirmed => 'จองสำเร็จ',
+    ReservStatus.cancelled => 'ยกเลิก',
+    ReservStatus.expired => 'หมดอายุ',
+    ReservStatus.used => 'ใช้แล้ว',
+  };
+
   static ReservStatus fromString(String s) {
     switch (s.toUpperCase()) {
       case 'CONFIRMED':
