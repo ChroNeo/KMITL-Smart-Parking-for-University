@@ -5,9 +5,13 @@ const {
   getMe,
   updateMe,
 } = require("../controllers/auth.controller"); // แก้ registor → register
-const { getStatus, getSlotById, getSlotDetail } = require("../controllers/slots.controller");
+const {
+  getStatus,
+  getSlotById,
+  getSlotDetail,
+} = require("../controllers/slots.controller");
 const auth = require("../middleware/auth.middleware");
-const { reservation } = require("../controllers/reservation.controller");
+const { reservation, getReservation } = require("../controllers/reservation.controller");
 const route = express.Router();
 
 /**
@@ -150,7 +154,7 @@ route.post("/register", register);
  *         description: Failed to fetch slot status
  */
 route.get("/slots/status", getStatus);
-route.get("/slots/:id",auth, getSlotDetail);
+route.get("/slots/:id", auth, getSlotDetail);
 route.put("/me", auth, updateMe);
 /**
  * @swagger
@@ -250,8 +254,8 @@ route.post("/reservation", auth, reservation);
  * /api/v1/reservation:
  *   post:
  *     summary: Create a parking slot reservation
- *     description: Reserves a specific parking slot for the authenticated user.  
- *       The slot will be locked for 60 minutes unless canceled or expired.  
+ *     description: Reserves a specific parking slot for the authenticated user.
+ *       The slot will be locked for 60 minutes unless canceled or expired.
  *       Requires JWT authentication.
  *     tags:
  *       - Reservations
@@ -306,5 +310,5 @@ route.post("/reservation", auth, reservation);
  *       500:
  *         description: Server error
  */
-
+route.get("/reservation", auth, getReservation);
 module.exports = route;

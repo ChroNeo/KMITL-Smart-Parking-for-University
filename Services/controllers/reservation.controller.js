@@ -5,7 +5,8 @@ const reservation = async (req, res) => {
   const { slot_number } = req.body;
   const userId = req.user?.id;
 
-  if (!slot_number) return res.status(400).json({ message: "slot_number is required" });
+  if (!slot_number)
+    return res.status(400).json({ message: "slot_number is required" });
 
   let tx;
   try {
@@ -58,10 +59,13 @@ const reservation = async (req, res) => {
       reservation_status: r.reservation_status,
       access_code: r.access_code,
       created_at: new Date(r.created_at).toISOString(),
-      expires_at: r.expires_at ? new Date(r.expires_at).toISOString() : null
+      expires_at: r.expires_at ? new Date(r.expires_at).toISOString() : null,
     });
   } catch (err) {
-    if (tx) try { await tx.rollback(); } catch {}
+    if (tx)
+      try {
+        await tx.rollback();
+      } catch {}
     console.error(err);
     return res.status(500).json({ message: "Server error" });
   } finally {
@@ -69,4 +73,30 @@ const reservation = async (req, res) => {
   }
 };
 
-module.exports = { reservation };
+const getReservation = async (req, res) => {
+  const userId = req.user.id;
+  try {
+    const [rows] = await conn.query(
+      `SELECT 
+        r.*,
+        s.slot_name,
+        u.full_name,
+        u.car_registration
+      FROM Reservation r
+      JOIN Parking_Slots s ON r.slot_number = s.slot_number
+      JOIN users u ON r.user_id = u.user_id
+      WHERE r.user_id = 2;
+      ;`,
+      [userId]
+    );
+    if (rows.length === 0) {
+      return res.status(404).json({ message: "Reservation not found" });
+    }
+    res.json(rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+module.exports = { reservation, getReservation };
