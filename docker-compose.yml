@@ -24,7 +24,18 @@ services:
       - ./Services:/usr/src/app
       - /usr/src/app/node_modules
     command: npm run dev
-
+  reservation-cron: 
+    build: ./Services
+    restart: always
+    command: ["node", "cron.js"]   # run cron worker only
+    environment:
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_USER: appuser
+      DB_PASSWORD: apppass
+      DB_NAME: IOT_Project
+    depends_on:
+      - db
   db:
     image: mysql:8.0
     container_name: db
