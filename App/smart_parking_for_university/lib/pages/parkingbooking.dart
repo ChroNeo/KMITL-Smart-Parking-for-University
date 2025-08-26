@@ -11,7 +11,6 @@ class ParkingBookingPage extends StatefulWidget {
 }
 
 class _ParkingBookingPageState extends State<ParkingBookingPage> {
-  final _formKey = GlobalKey<FormState>();
   final _api = ApiService();
   Map<String, dynamic>? reservation;
   bool loading = true;
@@ -150,12 +149,34 @@ class _ParkingBookingPageState extends State<ParkingBookingPage> {
                                       '-',
                                 ),
                                 const SizedBox(height: 12),
-                                _label('ผู้จอง'),
-                                _value(reservation!['full_name'] ?? '-'),
+                                Row(
+                                  children: [
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        _label('ผู้จอง'),
+                                        _value(
+                                          reservation!['full_name'] ?? '-',
+                                        ),
+                                      ],
+                                    ),
+                                    SizedBox(width: 25),
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        _label('ป้ายทะเบียน'),
+                                        _value(
+                                          reservation!['car_registration'] ??
+                                              '-',
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
                                 const SizedBox(height: 12),
-                                _label('ป้ายทะเบียน'),
-                                _value(reservation!['car_registration'] ?? '-'),
-                                const SizedBox(height: 12),
+
                                 _label('รหัสเข้า'),
                                 _value(reservation!['access_code'] ?? '-'),
                                 const SizedBox(height: 12),
