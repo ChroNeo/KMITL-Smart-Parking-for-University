@@ -72,6 +72,65 @@ const reservation = async (req, res) => {
     if (tx) tx.release();
   }
 };
+// GET /api/v1/reservations/by-slot/:slot_number
+const getReservationBySlot = async (req, res) => {
+  const userId = req.user.id; // จาก JWT
+  const slotNumber = Number(req.params.slot_number);
+  if (!Number.isInteger(slotNumber))
+    return res.status(400).json({ message: "slot_number ไม่ถูกต้อง" });
+
+  try {
+    // หา reservation ล่าสุดที่ยังแอคทีฟของช่องนี้
+    const [rows] = await conn.query(
+      `SELECT r.*, s.slot_name, u.full_name, u.car_registration
+       FROM Reservation r
+       JOIN Parking_Slots s ON r.slot_number = s.slot_number
+       JOIN users u ON r.user_id = u.user_id
+       WHERE r.slot_number = ? 
+         AND r.reservation_status IN ('CONFIRMED','USED')
+         AND r.expires_at > NOW()
+       ORDER BY r.created_at DESC
+       LIMIT 1`,
+      [slotNumber]
+    );
+
+    if (rows.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "ยังไม่มีการจองที่ใช้งานสำหรับช่องนี้" });
+    }
+
+    const r = rows[0];
+
+    // เจ้าของ หรือ admin เห็นได้เต็ม
+    if (r.user_id === userId || req.user.role === "admin") {
+      return res.json({
+        reservation_id: r.reservation_id,
+        slot_number: r.slot_number,
+        slot_name: r.slot_name,
+        full_name: r.full_name,
+        car_registration: r.car_registration,
+        access_code: r.access_code,
+        access_verified_at: r.access_verified_at,
+        created_at: r.created_at,
+        expires_at: r.expires_at,
+        reservation_status: r.reservation_status,
+      });
+    }
+
+    // คนอื่น: ไม่อนุญาต เห็นแค่ข้อมูลสาธารณะพอประมาณ
+    return res.status(403).json({
+      message: "ช่องนี้ถูกจองโดยผู้ใช้อื่น",
+      slot_number: r.slot_number,
+      slot_name: r.slot_name,
+      reserved_until: r.expires_at,
+      reservation_status: r.reservation_status,
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
 
 const getReservation = async (req, res) => {
   const userId = req.user.id;
@@ -85,7 +144,7 @@ const getReservation = async (req, res) => {
       FROM Reservation r
       JOIN Parking_Slots s ON r.slot_number = s.slot_number
       JOIN users u ON r.user_id = u.user_id
-      WHERE r.user_id = 2;
+      WHERE r.user_id = ?
       ;`,
       [userId]
     );
@@ -99,4 +158,4 @@ const getReservation = async (req, res) => {
   }
 };
 
-module.exports = { reservation, getReservation };
+module.exports = { reservation, getReservation,getReservationBySlot };

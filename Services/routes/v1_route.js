@@ -11,7 +11,11 @@ const {
   getSlotDetail,
 } = require("../controllers/slots.controller");
 const auth = require("../middleware/auth.middleware");
-const { reservation, getReservation } = require("../controllers/reservation.controller");
+const {
+  reservation,
+  getReservation,
+  getReservationBySlot,
+} = require("../controllers/reservation.controller");
 const route = express.Router();
 
 /**
@@ -311,4 +315,5 @@ route.post("/reservation", auth, reservation);
  *         description: Server error
  */
 route.get("/reservation", auth, getReservation);
+route.get("/reservation/by-slot/:slot_number", auth, getReservationBySlot);
 module.exports = route;
