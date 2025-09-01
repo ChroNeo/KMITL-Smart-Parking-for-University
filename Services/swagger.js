@@ -8,6 +8,15 @@ const options = {
       version: '1.0.0',
       description: 'A simple Express API for managing smart parking services.',
     },
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+        },
+      },
+    },
     servers: [
       {
         url: 'http://localhost:3000',

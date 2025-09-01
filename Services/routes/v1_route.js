@@ -16,6 +16,8 @@ const {
   getReservation,
   getReservationBySlot,
 } = require("../controllers/reservation.controller");
+const allow = require("../middleware/allow.middleware");
+const { getDashboard } = require("../controllers/dashboard.controller");
 const route = express.Router();
 
 /**
@@ -23,6 +25,17 @@ const route = express.Router();
  * tags:
  *   name: Auth
  *   description: User authentication and registration
+ */
+
+/**
+ * @swagger
+ * tags:
+ *   - name: Slots
+ *     description: Parking slots information and details
+ *   - name: Reservations
+ *     description: Create and view reservations
+ *   - name: Dashboard
+ *     description: Administrative analytics and reports
  */
 
 /**
@@ -158,6 +171,32 @@ route.post("/register", register);
  *         description: Failed to fetch slot status
  */
 route.get("/slots/status", getStatus);
+/**
+ * @swagger
+ * /api/v1/slots/{id}:
+ *   get:
+ *     summary: Get parking slot details
+ *     description: Returns reservation/usage details. Requires JWT. Admins see full details; users see only their own reservation for that slot.
+ *     tags: [Slots]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: Slot number
+ *     responses:
+ *       200:
+ *         description: Slot details
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden for non-owners (when another user reserved the slot)
+ *       404:
+ *         description: Slot not found or no reservation for this user
+ */
 route.get("/slots/:id", auth, getSlotDetail);
 route.put("/me", auth, updateMe);
 /**
@@ -314,6 +353,89 @@ route.post("/reservation", auth, reservation);
  *       500:
  *         description: Server error
  */
+/**
+ * @swagger
+ * /api/v1/reservation:
+ *   get:
+ *     summary: Get current user's latest reservation
+ *     tags: [Reservations]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Reservation record
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Reservation not found
+ */
 route.get("/reservation", auth, getReservation);
+/**
+ * @swagger
+ * /api/v1/reservation/by-slot/{slot_number}:
+ *   get:
+ *     summary: Get active reservation for a slot
+ *     description: Admins or the reservation owner receive full details; others receive limited info or 403.
+ *     tags: [Reservations]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: slot_number
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Slot number
+ *     responses:
+ *       200:
+ *         description: Reservation details
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Slot reserved by another user
+ *       404:
+ *         description: No active reservation for this slot
+ */
 route.get("/reservation/by-slot/:slot_number", auth, getReservationBySlot);
+/**
+ * @swagger
+ * /api/v1/dashboard:
+ *   get:
+ *     summary: Get dashboard analytics
+ *     description: Admin only. Returns daily traffic and per-slot usage within a date range. When no range is provided, it uses all available data.
+ *     tags: [Dashboard]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: from
+ *         required: false
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: Start date (YYYY-MM-DD). Default uses earliest data.
+ *       - in: query
+ *         name: to
+ *         required: false
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: End date (YYYY-MM-DD). Default uses latest data.
+ *       - in: query
+ *         name: include
+ *         required: false
+ *         schema:
+ *           type: string
+ *         description: Comma-separated parts to include (chart,slots)
+ *     responses:
+ *       200:
+ *         description: Dashboard response
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden (admin only)
+ */
+route.get("/dashboard",auth,allow("admin"),getDashboard);
+
+// Export the router so app.js can mount it
 module.exports = route;
