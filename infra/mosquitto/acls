@@ -1,0 +1,11 @@
+# Backend อ่าน/เขียนได้ทุกหัวข้อที่ระบบใช้
+user iot_backend
+topic readwrite univ/parking/#
+
+# อุปกรณ์ ESP32 ช่อง A2
+user esp32-A2
+topic write   univ/parking/slots/2/telemetry
+topic write   univ/parking/devices/esp32-A2/status
+topic read    univ/parking/slots/2/cmd
+
+# เพิ่มอุปกรณ์อื่นก็ทำบล็อกแบบนี้ต่อไป
