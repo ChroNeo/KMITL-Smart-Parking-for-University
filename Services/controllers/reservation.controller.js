@@ -1,6 +1,7 @@
 // controllers/reservation.controller.js
 const conn = require("../services/dbconn");
-
+const mqtt = require("../services/mqttClient"); // ← เพิ่ม
+const BASE = process.env.MQTT_BASE_TOPIC || "univ/parking"; // ← เพิ่ม
 const reservation = async (req, res) => {
   const { slot_number } = req.body;
   const userId = req.user?.id;
@@ -15,7 +16,7 @@ const reservation = async (req, res) => {
 
     // ล็อกแถวช่องจอดกันแข่งจอง
     const [slots] = await tx.query(
-      "SELECT status FROM Parking_Slots WHERE slot_number = ? FOR UPDATE",
+      "SELECT status, slot_name FROM Parking_Slots WHERE slot_number = ? FOR UPDATE",
       [slot_number]
     );
     if (slots.length === 0) {
@@ -51,6 +52,31 @@ const reservation = async (req, res) => {
     );
 
     await tx.commit();
+    
+    const slotName = slots[0].slot_name || `S${slot_number}`;
+    const stateTopic = `${BASE}/slots/${slot_number}/state`;
+    const cmdTopic = `${BASE}/slots/${slot_number}/cmd`;
+
+    // สถานะกลางให้ retained
+    const statePayload = JSON.stringify({
+      slot_number,
+      slotId: slotName,
+      status: "RESERVED",
+    });
+    mqtt.publish(stateTopic, statePayload, { qos: 1, retain: true }, (e) => {
+      if (e) console.error("[mqtt] publish state error:", e.message);
+    });
+
+    // คำสั่ง LED ใช้ค่า RGB แบบตัวเลข [R,G,B] ตามที่เจ้าต้องการ
+    const ledPayload = JSON.stringify({
+      op: "set_led",
+      rgb: [255, 255, 0],
+      brightness: 255,
+      reason: "RESERVED",
+    });
+    mqtt.publish(cmdTopic, ledPayload, { qos: 1, retain: false }, (e) => {
+      if (e) console.error("[mqtt] publish cmd error:", e.message);
+    });
 
     const r = rows[0];
     return res.status(201).json({
@@ -115,7 +141,7 @@ const getReservationBySlot = async (req, res) => {
         created_at: r.created_at,
         expires_at: r.expires_at,
         reservation_status: r.reservation_status,
-        phone_number: r.phone_number
+        phone_number: r.phone_number,
       });
     }
 
@@ -159,4 +185,4 @@ const getReservation = async (req, res) => {
   }
 };
 
-module.exports = { reservation, getReservation,getReservationBySlot };
+module.exports = { reservation, getReservation, getReservationBySlot };
