@@ -56,6 +56,8 @@ class _ParkingBookingPageState extends State<ParkingBookingPage> {
     }
   }
 
+  // No reservation action here; this page displays reservation details only.
+
   final _green = const Color(0xFF2EB94C); // เขียวหลักของเส้นขอบ/หัวเรื่อง
   final _bgLight = const Color(0xFFE9FBE9); // พื้นหลังเขียวอ่อน
 
@@ -206,6 +208,7 @@ class _ParkingBookingPageState extends State<ParkingBookingPage> {
                                   ],
                                 ),
                         ),
+                        const SizedBox(height: 16),
                       ],
                     ),
                   ),

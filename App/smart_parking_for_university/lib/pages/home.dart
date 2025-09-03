@@ -28,6 +28,7 @@ class _HomeState extends State<Home> {
   List<Map<String, dynamic>> slots = [];
   int? selectedSlot;
   int? slot_number;
+  bool reserving = false;
   @override
   void initState() {
     super.initState();
@@ -67,7 +68,7 @@ class _HomeState extends State<Home> {
     }
   }
 
-  void showCustomPopup(bool isBooking) {
+  void showCustomPopup(bool isBooking, {String? accessCode}) {
     showDialog(
       context: context,
       barrierDismissible: true,
@@ -83,12 +84,31 @@ class _HomeState extends State<Home> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const SizedBox(width: 12),
-              Text(
-                isBooking ? "จองที่จอดสำเร็จ" : "ยกเลิกที่จอดรถ",
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: isBooking ? Colors.green : Colors.red,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      isBooking ? "จองที่จอดสำเร็จ" : "ยกเลิกที่จอดรถ",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: isBooking ? Colors.green : Colors.red,
+                      ),
+                    ),
+                    if (isBooking && (accessCode?.isNotEmpty ?? false)) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        "รหัสเข้า: ${accessCode!}",
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               ),
               Icon(
@@ -126,7 +146,14 @@ class _HomeState extends State<Home> {
               print(slot);
               setState(() {
                 selectedSlot = index;
-                slot_number = slot['slot_number'] ?? 'N/A';
+                final sn = slot['slot_number'];
+                if (sn is int) {
+                  slot_number = sn;
+                } else if (sn is String) {
+                  slot_number = int.tryParse(sn);
+                } else {
+                  slot_number = null;
+                }
               });
             }
           : null,
@@ -249,8 +276,8 @@ class _HomeState extends State<Home> {
                     vertical: 12,
                   ),
                 ),
-                onPressed: canBook
-                    ? () {
+                onPressed: (canBook && !reserving)
+                    ? () async {
                         if (isReserved) {
                           Navigator.push(
                             context,
@@ -260,19 +287,46 @@ class _HomeState extends State<Home> {
                             ),
                           );
                         } else {
-                          showCustomPopup(true);
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  ParkingBookingPage(slotNumber: slot_number),
-                            ),
-                          );
+                          if (slot_number == null) return;
+                          setState(() => reserving = true);
+                          try {
+                            final res = await _api.reserveSlot(slot_number!);
+                            final failed =
+                                res is Map && (res['success'] == false);
+                            if (!failed) {
+                              final accessCode = (res['access_code'] ??
+                                      res['data']?['access_code'] ??
+                                      res['reservation']?['access_code'])
+                                  ?.toString();
+                              showCustomPopup(true, accessCode: accessCode);
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ParkingBookingPage(
+                                      slotNumber: slot_number),
+                                ),
+                              );
+                            } else {
+                              final msg = res['data']?['message'] ??
+                                  res['message'] ??
+                                  'จองไม่สำเร็จ';
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text(msg.toString())),
+                              );
+                            }
+                          } catch (e) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(e.toString())),
+                            );
+                          } finally {
+                            await fetchSlots();
+                            if (mounted) setState(() => reserving = false);
+                          }
                         }
                       }
                     : null,
                 child: Text(
-                  isReserved ? "ดู" : "จอง",
+                  reserving ? "กำลังจอง..." : (isReserved ? "ดู" : "จอง"),
                   style: const TextStyle(color: Colors.white),
                 ),
               ),

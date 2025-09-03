@@ -202,19 +202,46 @@ class ApiService {
 
   Future<Map<String, dynamic>> reserveSlot(int slotNumber) async {
     final uri = Uri.parse('${AppConfig.baseApiUrl}/reservation');
-    final res = await http.post(
-      uri,
-      headers: {
-        'Content-Type': 'application/json',
-        'authorization': 'Bearer ${await getToken()}',
-      },
-      body: jsonEncode({'slot_number': slotNumber}),
-    );
-    final data = jsonDecode(res.body);
-    if (res.statusCode != 200) {
-      return {'success': false, 'status': res.statusCode, 'data': data};
+    try {
+      final res = await http
+          .post(
+            uri,
+            headers: {
+              'Content-Type': 'application/json',
+              'authorization': 'Bearer ${await getToken()}',
+            },
+            body: jsonEncode({'slot_number': slotNumber}),
+          )
+          .timeout(const Duration(seconds: 15));
+
+      final body = utf8.decode(res.bodyBytes);
+      final data = _safeJson(body);
+      final ok = res.statusCode >= 200 && res.statusCode < 300; // include 201
+
+      return {
+        'success': ok,
+        'status': res.statusCode,
+        'data': data,
+      };
+    } on TimeoutException {
+      return {
+        'success': false,
+        'status': 408,
+        'data': {'message': 'Request timed out'},
+      };
+    } on SocketException {
+      return {
+        'success': false,
+        'status': 0,
+        'data': {'message': 'Network error. Check connection.'},
+      };
+    } on FormatException {
+      return {
+        'success': false,
+        'status': 0,
+        'data': {'message': 'Invalid JSON.'},
+      };
     }
-    return data;
   }
 
   Future<Map<String, dynamic>> getReservationBySlot(int slotNumber) async {
