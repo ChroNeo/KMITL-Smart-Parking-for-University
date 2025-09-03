@@ -90,10 +90,9 @@ INSERT INTO `users` (full_name, phone_number, role, car_brand, car_registration,
 INSERT INTO `Parking_Slots` (`slot_number`, `slot_name`, `status`) VALUES
 (1, 'A1', 'FREE'),
 (2, 'A2', 'FREE'),
-(3, 'A3', 'FREE'),
-(4, 'B1', 'OCCUPIED'),
-(5, 'B2', 'RESERVED'),
-(6, 'B3', 'DISABLED');
+(3, 'A3', 'OCCUPIED'),
+(4, 'A4', 'RESERVED'),
+(5, 'A5', 'DISABLED');
 
 -- Example Reservation
 INSERT INTO `Reservation` (user_id, slot_number, access_code, reservation_status, expires_at)
