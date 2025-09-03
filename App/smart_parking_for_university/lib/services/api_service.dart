@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:intl/intl.dart';
 import 'package:smart_parking_for_university/config.dart';
 import 'package:smart_parking_for_university/models/api_model.dart';
 
@@ -201,19 +202,46 @@ class ApiService {
 
   Future<Map<String, dynamic>> reserveSlot(int slotNumber) async {
     final uri = Uri.parse('${AppConfig.baseApiUrl}/reservation');
-    final res = await http.post(
-      uri,
-      headers: {
-        'Content-Type': 'application/json',
-        'authorization': 'Bearer ${await getToken()}',
-      },
-      body: jsonEncode({'slot_number': slotNumber}),
-    );
-    final data = jsonDecode(res.body);
-    if (res.statusCode != 200) {
-      return {'success': false, 'status': res.statusCode, 'data': data};
+    try {
+      final res = await http
+          .post(
+            uri,
+            headers: {
+              'Content-Type': 'application/json',
+              'authorization': 'Bearer ${await getToken()}',
+            },
+            body: jsonEncode({'slot_number': slotNumber}),
+          )
+          .timeout(const Duration(seconds: 15));
+
+      final body = utf8.decode(res.bodyBytes);
+      final data = _safeJson(body);
+      final ok = res.statusCode >= 200 && res.statusCode < 300; // include 201
+
+      return {
+        'success': ok,
+        'status': res.statusCode,
+        'data': data,
+      };
+    } on TimeoutException {
+      return {
+        'success': false,
+        'status': 408,
+        'data': {'message': 'Request timed out'},
+      };
+    } on SocketException {
+      return {
+        'success': false,
+        'status': 0,
+        'data': {'message': 'Network error. Check connection.'},
+      };
+    } on FormatException {
+      return {
+        'success': false,
+        'status': 0,
+        'data': {'message': 'Invalid JSON.'},
+      };
     }
-    return data;
   }
 
   Future<Map<String, dynamic>> getReservationBySlot(int slotNumber) async {
@@ -257,6 +285,54 @@ class ApiService {
         'status': 0,
         'data': {'message': 'Invalid JSON.'},
       };
+    }
+  }
+
+  // Dashboard data with weekly range (Mon-Sun)
+  Future<Map<String, dynamic>> getDashboard({DateTime? from, DateTime? to}) async {
+    String fmt(DateTime d) => DateFormat('yyyy-MM-dd').format(d);
+    DateTime now = DateTime.now();
+    DateTime startOfWeek(DateTime d) {
+      final base = DateTime(d.year, d.month, d.day);
+      final diff = (base.weekday - DateTime.monday) % 7; // Monday start
+      return base.subtract(Duration(days: diff));
+    }
+
+    final DateTime f = from ?? startOfWeek(now);
+    final DateTime t = to ?? f.add(const Duration(days: 1 * 7 - 1)); // through Sunday
+
+    final token = await getToken();
+    final uri = Uri.parse('${AppConfig.baseApiUrl}/dashboard').replace(
+      queryParameters: {
+        'from': fmt(f),
+        'to': fmt(t),
+      },
+    );
+
+    try {
+      final res = await http
+          .get(
+            uri,
+            headers: {
+              'Accept': 'application/json',
+              if (token != null) 'authorization': 'Bearer $token',
+            },
+          )
+          .timeout(const Duration(seconds: 15));
+
+      final body = utf8.decode(res.bodyBytes);
+      final data = _safeJson(body);
+      if (res.statusCode >= 200 && res.statusCode < 300) {
+        return data;
+      }
+      throw ApiException(
+        data['error']?['message']?.toString() ?? 'Request failed',
+        statusCode: res.statusCode,
+      );
+    } on TimeoutException {
+      throw ApiException('Request timed out');
+    } on SocketException {
+      throw ApiException('Network error. Check connection.');
     }
   }
 }

@@ -56,6 +56,8 @@ class _ParkingBookingPageState extends State<ParkingBookingPage> {
     }
   }
 
+  // No reservation action here; this page displays reservation details only.
+
   final _green = const Color(0xFF2EB94C); // เขียวหลักของเส้นขอบ/หัวเรื่อง
   final _bgLight = const Color(0xFFE9FBE9); // พื้นหลังเขียวอ่อน
 
@@ -75,140 +77,142 @@ class _ParkingBookingPageState extends State<ParkingBookingPage> {
       body: loading
           ? const Center(child: CircularProgressIndicator())
           : error != null
-          ? Center(
-              child: Text(error!, style: const TextStyle(color: Colors.red)),
-            )
-          : SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-              child: Column(
-                children: [
-                  const SizedBox(height: 8),
-                  Icon(Icons.directions_car, size: 56, color: Colors.black87),
-                  const SizedBox(height: 8),
-                  Text(
-                    'จองที่จอดรถช่อง ${widget.slotNumber}',
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.w800,
-                      color: _green,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  // Card
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.5),
-                          blurRadius: 12,
-                          offset: const Offset(0, 6),
+              ? Center(
+                  child: Text(error!, style: const TextStyle(color: Colors.red)),
+                )
+              : RefreshIndicator(
+                  onRefresh: fetchReservation,
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                    child: Column(
+                      children: [
+                        const SizedBox(height: 8),
+                        Icon(Icons.directions_car, size: 56, color: Colors.black87),
+                        const SizedBox(height: 8),
+                        Text(
+                          'จองที่จอดรถช่อง ${widget.slotNumber}',
+                          style: TextStyle(
+                            fontSize: 32,
+                            fontWeight: FontWeight.w800,
+                            color: _green,
+                          ),
                         ),
-                      ],
-                    ),
-                    child: reservation == null
-                        ? const SizedBox()
-                        : Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // If not your slot
-                              if (reservation!['message'] != null) ...[
-                                Text(
-                                  reservation!['message'] ?? '',
-                                  style: const TextStyle(
-                                    fontSize: 18,
-                                    color: Colors.red,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const SizedBox(height: 12),
-                                _label('ช่องจอด'),
-                                _value(
-                                  reservation!['slot_name'] ??
-                                      reservation!['slot_number'] ??
-                                      '-',
-                                ),
-                                const SizedBox(height: 12),
-                                _label('สถานะ'),
-                                _value(
-                                  reservation!['reservation_status'] ?? '-',
-                                ),
-                                const SizedBox(height: 12),
-                                _label('จองถึง'),
-                                _value(
-                                  reservation!['reserved_until'],
-                                  isDate: true,
-                                ),
-                              ] else ...[
-                                _label('ช่องจอด'),
-                                _value(
-                                  reservation!['slot_name'] ??
-                                      reservation!['slot_number'] ??
-                                      '-',
-                                ),
-                                const SizedBox(height: 12),
-                                Row(
-                                  children: [
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        _label('ผู้จอง'),
-                                        _value(
-                                          reservation!['full_name'] ?? '-',
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(width: 25),
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        _label('ป้ายทะเบียน'),
-                                        _value(
-                                          reservation!['car_registration'] ??
-                                              '-',
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 12),
-
-                                _label('รหัสเข้า'),
-                                _value(reservation!['access_code'] ?? '-'),
-                                const SizedBox(height: 12),
-                                _label('เวลาที่จอง'),
-                                _value(
-                                  reservation!['created_at'],
-                                  isDate: true,
-                                ),
-                                const SizedBox(height: 12),
-                                _label('หมดอายุ'),
-                                _value(
-                                  reservation!['expires_at'],
-                                  isDate: true,
-                                ),
-                                const SizedBox(height: 12),
-                                _label('เบอร์ติดต่อ'),
-                                _value(reservation!['phone_number'] ?? '-'),
-                                const SizedBox(height: 12),
-                                _label('สถานะ'),
-                                _value(
-                                  ReservStatusX.fromString(
-                                    reservation!['reservation_status'] ?? '-',
-                                  ).thai,
-                                ),
-                              ],
+                        const SizedBox(height: 24),
+                        // Card
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.5),
+                                blurRadius: 12,
+                                offset: const Offset(0, 6),
+                              ),
                             ],
                           ),
+                          child: reservation == null
+                              ? const SizedBox()
+                              : Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    // If not your slot
+                                    if (reservation!['message'] != null) ...[
+                                      Text(
+                                        reservation!['message'] ?? '',
+                                        style: const TextStyle(
+                                          fontSize: 18,
+                                          color: Colors.red,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 12),
+                                      _label('ช่องจอด'),
+                                      _value(
+                                        reservation!['slot_name'] ??
+                                            reservation!['slot_number'] ??
+                                            '-',
+                                      ),
+                                      const SizedBox(height: 12),
+                                      _label('สถานะ'),
+                                      _value(
+                                        reservation!['reservation_status'] ?? '-',
+                                      ),
+                                      const SizedBox(height: 12),
+                                      _label('จองถึง'),
+                                      _value(
+                                        reservation!['reserved_until'],
+                                        isDate: true,
+                                      ),
+                                    ] else ...[
+                                      _label('ช่องจอด'),
+                                      _value(
+                                        reservation!['slot_name'] ??
+                                            reservation!['slot_number'] ??
+                                            '-',
+                                      ),
+                                      const SizedBox(height: 12),
+                                      Row(
+                                        children: [
+                                          Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              _label('ผู้จอง'),
+                                              _value(
+                                                reservation!['full_name'] ?? '-',
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox(width: 25),
+                                          Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              _label('ป้ายทะเบียน'),
+                                              _value(
+                                                reservation!['car_registration'] ?? '-',
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 12),
+
+                                      _label('รหัสเข้า'),
+                                      _value(reservation!['access_code'] ?? '-'),
+                                      const SizedBox(height: 12),
+                                      _label('เวลาที่จอง'),
+                                      _value(
+                                        reservation!['created_at'],
+                                        isDate: true,
+                                      ),
+                                      const SizedBox(height: 12),
+                                      _label('หมดอายุ'),
+                                      _value(
+                                        reservation!['expires_at'],
+                                        isDate: true,
+                                      ),
+                                      const SizedBox(height: 12),
+                                      _label('เบอร์ติดต่อ'),
+                                      _value(reservation!['phone_number'] ?? '-'),
+                                      const SizedBox(height: 12),
+                                      _label('สถานะ'),
+                                      _value(
+                                        ReservStatusX.fromString(
+                                          reservation!['reservation_status'] ?? '-',
+                                        ).thai,
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                        ),
+                        const SizedBox(height: 16),
+                      ],
+                    ),
                   ),
-                ],
-              ),
-            ),
+                ),
     );
   }
 
