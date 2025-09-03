@@ -4,6 +4,7 @@ const cors = require("cors");
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('./swagger.js'); 
 const app = express();
+require('./services/mqtt-bridge').start();
 
 // routes
 const testroutes = require("./routes/test_route.js");
