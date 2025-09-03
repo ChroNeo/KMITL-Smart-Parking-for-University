@@ -137,7 +137,7 @@ class ApiService {
       final msg = data['error']?['message'] ?? 'Request failed';
       throw Exception(msg);
     }
-    return jsonDecode(res.body);
+    return utf8.decode(res.bodyBytes);
   }
 
   Future<Map<String, dynamic>> updateMe({
@@ -217,7 +217,9 @@ class ApiService {
   }
 
   Future<Map<String, dynamic>> getReservationBySlot(int slotNumber) async {
-    final uri = Uri.parse('${AppConfig.baseApiUrl}/reservation/by-slot/$slotNumber');
+    final uri = Uri.parse(
+      '${AppConfig.baseApiUrl}/reservation/by-slot/$slotNumber',
+    );
     try {
       final res = await http
           .get(
