@@ -335,4 +335,46 @@ class ApiService {
       throw ApiException('Network error. Check connection.');
     }
   }
+
+  Future<Map<String, dynamic>> cancelReservation(int reservationId) async {
+    final uri = Uri.parse('${AppConfig.baseApiUrl}/reservation/$reservationId');
+    try {
+      final res = await http
+          .delete(
+            uri,
+            headers: {
+              'Accept': 'application/json',
+              'authorization': 'Bearer ${await getToken()}',
+            },
+          )
+          .timeout(const Duration(seconds: 15));
+
+      final body = utf8.decode(res.bodyBytes);
+      final data = _safeJson(body);
+      final ok = res.statusCode >= 200 && res.statusCode < 300;
+      return {
+        'success': ok,
+        'status': res.statusCode,
+        'data': data,
+      };
+    } on TimeoutException {
+      return {
+        'success': false,
+        'status': 408,
+        'data': {'message': 'Request timed out'},
+      };
+    } on SocketException {
+      return {
+        'success': false,
+        'status': 0,
+        'data': {'message': 'Network error. Check connection.'},
+      };
+    } on FormatException {
+      return {
+        'success': false,
+        'status': 0,
+        'data': {'message': 'Invalid JSON.'},
+      };
+    }
+  }
 }

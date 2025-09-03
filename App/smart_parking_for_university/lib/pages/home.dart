@@ -29,6 +29,7 @@ class _HomeState extends State<Home> {
   int? selectedSlot;
   int? slot_number;
   bool reserving = false;
+  bool cancelling = false;
   @override
   void initState() {
     super.initState();
@@ -90,7 +91,7 @@ class _HomeState extends State<Home> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      isBooking ? "จองที่จอดสำเร็จ" : "ยกเลิกที่จอดรถ",
+                      isBooking ? "จองที่จอดสำเร็จ" : "ยกเลิกที่จอดรถสำเร็จ",
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -125,6 +126,91 @@ class _HomeState extends State<Home> {
         ),
       ),
     );
+  }
+
+  Future<bool> showCustomConfirmPopup({
+    required String title,
+    required String message,
+    IconData icon = Icons.cancel,
+    Color color = Colors.red,
+  }) async {
+    final result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: true,
+      builder: (_) => Dialog(
+        backgroundColor: const Color(0xFFE0FBDB),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: const Color(0xFFD5FCD5),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(icon, color: color, size: 36),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: color,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          message,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            color: Colors.black87,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context, false),
+                    child: const Icon(Icons.close, size: 20),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context, false),
+                    child: const Text('ไม่'),
+                  ),
+                  const SizedBox(width: 8),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: color,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(24),
+                      ),
+                    ),
+                    onPressed: () => Navigator.pop(context, true),
+                    child: const Text('ยืนยัน'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    return result ?? false;
   }
 
   bool isSlotAvailable(String status) =>
@@ -177,7 +263,7 @@ class _HomeState extends State<Home> {
                 Text(
                   status.thai,
                   style: TextStyle(
-                    color: status.color,
+                    color: Colors.black54,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -291,23 +377,25 @@ class _HomeState extends State<Home> {
                           setState(() => reserving = true);
                           try {
                             final res = await _api.reserveSlot(slot_number!);
-                            final failed =
-                                res is Map && (res['success'] == false);
+                            final failed = (res['success'] == false);
                             if (!failed) {
-                              final accessCode = (res['access_code'] ??
-                                      res['data']?['access_code'] ??
-                                      res['reservation']?['access_code'])
-                                  ?.toString();
-                              showCustomPopup(true, accessCode: accessCode);
+                              final accessCode =
+                                  (res['access_code'] ??
+                                          res['data']?['access_code'] ??
+                                          res['reservation']?['access_code'])
+                                      ?.toString();
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
                                   builder: (context) => ParkingBookingPage(
-                                      slotNumber: slot_number),
+                                    slotNumber: slot_number,
+                                  ),
                                 ),
                               );
+                              showCustomPopup(true, accessCode: accessCode);
                             } else {
-                              final msg = res['data']?['message'] ??
+                              final msg =
+                                  res['data']?['message'] ??
                                   res['message'] ??
                                   'จองไม่สำเร็จ';
                               ScaffoldMessenger.of(context).showSnackBar(
@@ -343,8 +431,60 @@ class _HomeState extends State<Home> {
                     vertical: 12,
                   ),
                 ),
-                onPressed: canCancel ? () => showCustomPopup(false) : null,
-                child: const Text("ยกเลิก"),
+                onPressed: (canCancel && !cancelling)
+                    ? () async {
+                        if (slot_number == null) return;
+                        // fetch reservation for this slot to get reservation_id
+                        try {
+                          setState(() => cancelling = true);
+                          final res = await _api.getReservationBySlot(slot_number!);
+                          if (res['success'] != true) {
+                            final msg = res['data']?['message'] ?? 'ไม่พบข้อมูลการจองสำหรับยกเลิก';
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(msg.toString())),
+                            );
+                            return;
+                          }
+
+                          final data = res['data'] as Map<String, dynamic>;
+                          final rid = data['reservation_id'];
+                          if (rid == null) {
+                            final msg = data['message'] ?? 'ไม่มีสิทธิ์หรือไม่มีการจองที่ยกเลิกได้';
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(msg.toString())),
+                            );
+                            return;
+                          }
+
+                          final confirm = await showCustomConfirmPopup(
+                            title: 'ยืนยันการยกเลิก',
+                            message:
+                                'ยกเลิกการจองช่อง ${data['slot_name'] ?? data['slot_number'] ?? slot_number}?',
+                            icon: Icons.cancel,
+                            color: Colors.red,
+                          );
+                          if (!confirm) return;
+
+                          final cancelRes = await _api.cancelReservation(int.tryParse(rid.toString()) ?? -1);
+                          if (cancelRes['success'] == true) {
+                            showCustomPopup(false);
+                          } else {
+                            final msg = cancelRes['data']?['message'] ?? 'ยกเลิกไม่สำเร็จ';
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(msg.toString())),
+                            );
+                          }
+                        } catch (e) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(e.toString())),
+                          );
+                        } finally {
+                          await fetchSlots();
+                          if (mounted) setState(() => cancelling = false);
+                        }
+                      }
+                    : null,
+                child: Text(cancelling ? 'กำลังยกเลิก...' : 'ยกเลิก'),
               ),
             ],
           ),
