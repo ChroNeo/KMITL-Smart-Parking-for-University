@@ -15,6 +15,7 @@ const {
   reservation,
   getReservation,
   getReservationBySlot,
+  cancelReservation,
 } = require("../controllers/reservation.controller");
 const allow = require("../middleware/allow.middleware");
 const { getDashboard } = require("../controllers/dashboard.controller");
@@ -397,6 +398,35 @@ route.get("/reservation", auth, getReservation);
  *         description: No active reservation for this slot
  */
 route.get("/reservation/by-slot/:slot_number", auth, getReservationBySlot);
+/**
+ * @swagger
+ * /api/v1/reservation/{id}:
+ *   delete:
+ *     summary: Cancel a reservation
+ *     description: Only the reservation owner or an admin can cancel a reservation. Cancels only when status is CONFIRMED.
+ *     tags: [Reservations]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Reservation ID
+ *     responses:
+ *       200:
+ *         description: Reservation cancelled
+ *       400:
+ *         description: Invalid id or status not cancellable
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden (not owner/admin)
+ *       404:
+ *         description: Reservation not found
+ */
+route.delete("/reservation/:id", auth, cancelReservation);
 /**
  * @swagger
  * /api/v1/dashboard:
