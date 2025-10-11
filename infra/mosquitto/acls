@@ -1,12 +1,13 @@
-# Backend อ่าน/เขียนได้ทุกหัวข้อที่ระบบใช้
+# Backend อ่าน/เขียนได้ทุกหัวข้อ
 user iot_backend
 topic readwrite univ/parking/#
 
-# อุปกรณ์ ESP32 ช่อง A2
-user esp32-A2
-topic write univ/parking/slots/+/telemetry
-topic write univ/parking/devices/esp32-A2/status
-topic read  univ/parking/slots/+/state
-topic read  univ/parking/slots/+/cmd
+# อุปกรณ์ ESP32 ทุกตัว
+pattern write univ/parking/slots/+/telemetry
+pattern read  univ/parking/slots/+/state
+pattern read  univ/parking/slots/+/cmd
 
-# เพิ่มอุปกรณ์อื่นก็ทำบล็อกแบบนี้ต่อไป
+# สำหรับแต่ละ device ใช้ชื่อ user = esp32-<ID> แล้วได้สิทธิ์เข้าหัวข้อเฉพาะตัวเอง
+pattern write univ/parking/devices/%u/access
+pattern read  univ/parking/devices/%u/cmd
+pattern write univ/parking/devices/%u/status

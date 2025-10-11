@@ -7,6 +7,8 @@ const client = require("./mqttClient");
 const BASE = process.env.MQTT_BASE_TOPIC || "univ/parking";
 
 const TOPIC_TELEMETRY = `${BASE}/slots/+/telemetry`;
+const TOPIC_ACCESS = `${BASE}/devices/+/access`;
+const topicDevCmd = (id) => `${BASE}/devices/${id}/cmd`;
 const topicState = (slot) => `${BASE}/slots/${slot}/state`;
 const topicCmd = (slot) => `${BASE}/slots/${slot}/cmd`;
 
@@ -21,6 +23,15 @@ const validateTelemetry = ajv.compile({
     occupied: { type: "boolean" },
     ts: { type: "string" },
   },
+});
+const validateAccess = ajv.compile({
+  type: "object",
+  required: ["deviceId", "access_code"],
+  properties: {
+    deviceId: { type: "string", minLength: 1 },
+    access_code: { type: "string", minLength: 4, maxLength: 20 },
+  },
+  additionalProperties: true,
 });
 
 function log(...args) {
@@ -195,13 +206,69 @@ async function handleTelemetry(topic, payload) {
 }
 
 // ─────────────────────────────────────────────────────────────
+async function handleAccess(topic, payload) {
+  let msg;
+  try {
+    msg = JSON.parse(payload.toString());
+  } catch {
+    return;
+  }
+  if (!validateAccess(msg)) return;
+
+  const { deviceId, access_code } = msg;
+  const devId = String(deviceId);
+
+  // หา reservation ที่โค้ดตรง ยังคง CONFIRMED และไม่หมดอายุ
+  const [rows] = await pool.query(
+    `SELECT r.slot_number
+     FROM Reservation r
+     WHERE r.access_code = ?
+       AND r.reservation_status = 'CONFIRMED'
+       AND r.expires_at > NOW()
+     ORDER BY r.expires_at ASC
+     LIMIT 1`,
+    [access_code]
+  );
+
+  let reply;
+  if (rows.length) {
+    const slot = rows[0].slot_number;
+
+    // ส่งคำตอบกลับไปหาอุปกรณ์
+    reply = {
+      op: "access_reply",
+      decision: "GRANTED",
+      slot_number: slot,
+      reason: "CODE_OK",
+    };
+
+    // อย่าเปลี่ยนไฟเป็นแดงตอนนี้ ปล่อยสถานะ RESERVED/ไฟเหลืองต่อไป
+    // ระบบเดิมจะเปลี่ยนเป็น OCCUPIED + ไฟแดงเมื่อ IR ส่ง occupied:true เข้ามาแล้วเท่านั้น :contentReference[oaicite:3]{index=3} :contentReference[oaicite:4]{index=4}
+  } else {
+    reply = {
+      op: "access_reply",
+      decision: "DENIED",
+      reason: "INVALID_OR_EXPIRED",
+    };
+  }
+
+  client.publish(topicDevCmd(devId), JSON.stringify(reply), {
+    qos: 1,
+    retain: false,
+  });
+}
 
 let started = false;
 function onMessage(topic, payload) {
   if (topic.startsWith(`${BASE}/slots/`) && topic.endsWith("/telemetry")) {
     handleTelemetry(topic, payload).catch((e) =>
       log("handle error:", e.message)
-    );
+    ); // มีอยู่แล้ว :contentReference[oaicite:5]{index=5}
+    return;
+  }
+  if (topic.startsWith(`${BASE}/devices/`) && topic.endsWith("/access")) {
+    handleAccess(topic, payload).catch((e) => log("access error:", e.message));
+    return;
   }
 }
 
@@ -210,6 +277,10 @@ function ensureSubscribe() {
     client.subscribe(TOPIC_TELEMETRY, { qos: 1 }, (err) => {
       if (err) log("subscribe error:", err.message);
       else log("subscribed:", TOPIC_TELEMETRY);
+    });
+    client.subscribe(TOPIC_ACCESS, { qos: 1 }, (err) => {
+      if (err) log("subscribe error:", err.message);
+      else log("subscribed:", TOPIC_ACCESS);
     });
   } else {
     client.once("connect", ensureSubscribe);
